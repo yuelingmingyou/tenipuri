@@ -1,8 +1,8 @@
-// ==================== 网球王子公式书网站 - 完全版 ====================
+// ==================== 网球王子公式书网站 - 修复版 ====================
 
 class TenipuriApp {
     constructor() {
-        this.currentView = 'character'; // character | school | school-detail
+        this.currentView = 'character';
         this.currentCharacter = 'echizen';
         this.currentBookId = '10.5';
         this.currentSchoolId = null;
@@ -17,8 +17,6 @@ class TenipuriApp {
         this.bindEvents();
     }
 
-    // ==================== 主渲染 ====================
-    
     render() {
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -33,12 +31,35 @@ class TenipuriApp {
             </div>
             ${this.renderToolbar()}
         `;
-        
         this.afterRender();
     }
 
     renderSidebar() {
         const groups = db.getCharactersBySchool();
+        let html = '';
+        
+        for (const [schoolId, group] of groups) {
+            const collapsed = this.sidebarCollapsed.has(schoolId);
+            html += `
+                <div class="school-group">
+                    <button class="school-toggle ${collapsed ? 'collapsed' : ''}" data-school="${schoolId}">
+                        <span>
+                            <span class="school-icon ${schoolId}">${group.school.name.charAt(0)}</span>
+                            ${group.school.name}
+                        </span>
+                        <span style="font-size: 0.75rem; opacity: 0.6;">${group.characters.length}人</span>
+                    </button>
+                    <div class="character-list ${collapsed ? 'collapsed' : ''}">
+                        ${group.characters.map(char => `
+                            <div class="character-item ${char.id === this.currentCharacter ? 'active' : ''}"
+                                 data-character="${char.id}">
+                                ${char.displayName}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
         
         return `
             <aside class="sidebar" id="sidebar">
@@ -48,38 +69,10 @@ class TenipuriApp {
                         <span class="ruby">OFFICIAL FANBOOK ARCHIVE</span>
                     </div>
                 </div>
-                
-                ${Array.from(groups.entries()).map(([schoolId, group]) => {
-                    const collapsed = this.sidebarCollapsed.has(schoolId);
-                    return `
-                        <div class="school-group">
-                            <button class="school-toggle ${collapsed ? 'collapsed' : ''}" 
-                                    data-school="${schoolId}">
-                                <span>
-                                    <span class="school-icon ${schoolId}">${group.school.name.charAt(0)}</span>
-                                    ${group.school.name}
-                                </span>
-                                <span style="font-size: 0.75rem; opacity: 0.6;">${group.characters.length}人</span>
-                            </button>
-                            <div class="character-list ${collapsed ? 'collapsed' : ''}">
-                                ${group.characters.map(char => `
-                                    <div class="character-item ${char.id === this.currentCharacter ? 'active' : ''}"
-                                         data-character="${char.id}">
-                                        ${char.displayName}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-                
+                ${html}
                 <div class="sidebar-footer">
-                    <button class="add-btn" id="add-character-btn">
-                        ＋ 新規キャラクター
-                    </button>
-                    <button class="add-btn" id="add-book-btn" style="margin-top: 0.5rem;">
-                        ＋ 公式書バージョン追加
-                    </button>
+                    <button class="add-btn" id="add-character-btn">＋ 新規キャラクター</button>
+                    <button class="add-btn" id="add-book-btn" style="margin-top: 0.5rem;">＋ 公式書バージョン追加</button>
                 </div>
             </aside>
         `;
@@ -90,10 +83,8 @@ class TenipuriApp {
             <nav class="top-nav">
                 <span class="nav-logo">テニプリDB</span>
                 <div class="nav-tabs">
-                    <button class="nav-tab ${this.currentView === 'character' ? 'active' : ''}" 
-                            data-view="character">キャラクター</button>
-                    <button class="nav-tab ${this.currentView.startsWith('school') ? 'active' : ''}" 
-                            data-view="school">学校紹介</button>
+                    <button class="nav-tab ${this.currentView === 'character' ? 'active' : ''}" data-view="character">キャラクター</button>
+                    <button class="nav-tab ${this.currentView.startsWith('school') ? 'active' : ''}" data-view="school">学校紹介</button>
                 </div>
             </nav>
         `;
@@ -101,18 +92,12 @@ class TenipuriApp {
 
     renderCurrentView() {
         switch(this.currentView) {
-            case 'character':
-                return this.renderCharacterView();
-            case 'school':
-                return this.renderSchoolsView();
-            case 'school-detail':
-                return this.renderSchoolDetailView();
-            default:
-                return this.renderCharacterView();
+            case 'character': return this.renderCharacterView();
+            case 'school': return this.renderSchoolsView();
+            case 'school-detail': return this.renderSchoolDetailView();
+            default: return this.renderCharacterView();
         }
     }
-
-    // ==================== 角色页面 ====================
 
     renderCharacterView() {
         const char = db.getCharacter(this.currentCharacter);
@@ -120,23 +105,18 @@ class TenipuriApp {
         
         const version = char.versions[this.currentBookId] || Object.values(char.versions)[0];
         const books = db.getAllBooks();
-        const hasVersion = char.versions[this.currentBookId];
         
         return `
             <div class="character-page">
-                <!-- 公式书版本标签 -->
                 <div class="book-tabs">
                     ${books.map(b => `
-                        <button class="book-tab ${b.id === this.currentBookId ? 'active' : ''}"
-                                data-book="${b.id}">
-                            ${b.name}
-                            ${!char.versions[b.id] ? '（未登録）' : ''}
+                        <button class="book-tab ${b.id === this.currentBookId ? 'active' : ''}" data-book="${b.id}">
+                            ${b.name}${!char.versions[b.id] ? '（未登録）' : ''}
                         </button>
                     `).join('')}
                     <button class="add-book-btn" id="add-new-book" title="新規バージョン">＋</button>
                 </div>
                 
-                <!-- 图片画廊 -->
                 <div class="image-gallery">
                     <div class="gallery-header">
                         <span class="gallery-title">📷 公式書画像 (${version.images.length}枚)</span>
@@ -155,11 +135,9 @@ class TenipuriApp {
                             <span class="upload-text">画像を追加<br>（クリックまたはドラッグ）</span>
                         </div>
                     </div>
-                    <input type="file" class="hidden-input" id="gallery-file-input" 
-                           accept="image/*" multiple>
+                    <input type="file" class="hidden-input" id="gallery-file-input" accept="image/*" multiple>
                 </div>
                 
-                <!-- 角色资料 -->
                 <div class="character-info">
                     <div class="visual-section">
                         <div class="main-visual" id="main-visual">
@@ -167,17 +145,11 @@ class TenipuriApp {
                                 `<img src="${version.images[0].dataUrl}" alt="${char.displayName}">` :
                                 `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">[メインビジュアル]</div>`
                             }
-                            <button class="visual-upload-btn" onclick="document.getElementById('main-visual-input').click()">
-                                メイン画像を設定
-                            </button>
+                            <button class="visual-upload-btn" onclick="document.getElementById('main-visual-input').click()">メイン画像を設定</button>
                         </div>
                         <input type="file" class="hidden-input" id="main-visual-input" accept="image/*">
-                        
-                        <div class="character-quote">
-                            ${version.notes || '「まだまだだね」'}
-                        </div>
+                        <div class="character-quote">${version.notes || '「まだまだだね」'}</div>
                     </div>
-                    
                     <div class="profile-section">
                         ${this.renderProfileForm(char, version)}
                     </div>
@@ -190,6 +162,36 @@ class TenipuriApp {
         const fields = version.fixedFields;
         const isEditing = this.editingData === this.currentBookId;
         
+        let fieldsHtml = '';
+        for (const [key, field] of Object.entries(fields)) {
+            const fullWidth = field.type === 'textarea' ? 'full-width' : '';
+            fieldsHtml += `
+                <div class="field-item ${fullWidth}">
+                    <span class="field-label">${field.label}</span>
+                    <div class="field-value ${isEditing ? 'editing' : ''}">
+                        ${isEditing ? this.renderEditField(key, field) : (field.value || '—')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        let customHtml = '';
+        for (let i = 0; i < version.customFields.length; i++) {
+            const cf = version.customFields[i];
+            customHtml += `
+                <div class="custom-field-row">
+                    ${isEditing ? `
+                        <input type="text" name="custom-label-${i}" value="${cf.label}" placeholder="項目名">
+                        <input type="text" name="custom-value-${i}" value="${cf.value}" placeholder="内容">
+                        <button type="button" class="btn-icon remove-custom" data-index="${i}">×</button>
+                    ` : `
+                        <span style="min-width: 100px; font-weight: bold;">${cf.label}:</span>
+                        <span>${cf.value}</span>
+                    `}
+                </div>
+            `;
+        }
+        
         return `
             <div class="profile-header">
                 <div>
@@ -198,49 +200,25 @@ class TenipuriApp {
                         <span class="kana">${fields.nameKana.value || ''}</span>
                     </div>
                 </div>
-                <span class="profile-school-tag" 
-                      style="background: ${db.getSchool(char.schoolId)?.color || '#666'}; color: #fff;">
+                <span class="profile-school-tag" style="background: ${db.getSchool(char.schoolId)?.color || '#666'}; color: #fff;">
                     ${db.getSchool(char.schoolId)?.name || '不明'}
                 </span>
             </div>
             
             <form id="profile-form" data-book="${this.currentBookId}">
-                <div class="fixed-fields">
-                    ${Object.entries(fields).map(([key, field]) => `
-                        <div class="field-item ${field.type === 'textarea' ? 'full-width' : ''}">
-                            <span class="field-label">${field.label}</span>
-                            <div class="field-value ${isEditing ? 'editing' : ''}">
-                                ${isEditing ? this.renderEditField(key, field) : (field.value || '—')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
+                <div class="fixed-fields">${fieldsHtml}</div>
                 
-                <!-- 自定义字段 -->
                 <div class="custom-section">
                     <div class="section-header">
                         <span class="section-title">追加情報</span>
                         ${isEditing ? `<button type="button" class="btn-small" id="add-custom-field">＋ 追加</button>` : ''}
                     </div>
                     <div class="custom-fields-list" id="custom-fields">
-                        ${version.customFields.map((cf, i) => `
-                            <div class="custom-field-row">
-                                ${isEditing ? `
-                                    <input type="text" name="custom-label-${i}" value="${cf.label}" placeholder="項目名">
-                                    <input type="text" name="custom-value-${i}" value="${cf.value}" placeholder="内容">
-                                    <button type="button" class="btn-icon remove-custom" data-index="${i}">×</button>
-                                ` : `
-                                    <span style="min-width: 100px; font-weight: bold;">${cf.label}:</span>
-                                    <span>${cf.value}</span>
-                                `}
-                            </div>
-                        `).join('')}
-                        ${version.customFields.length === 0 && !isEditing ? 
-                            '<span style="color: #999; font-size: 0.85rem;">追加情報はありません</span>' : ''}
+                        ${customHtml}
+                        ${version.customFields.length === 0 && !isEditing ? '<span style="color: #999; font-size: 0.85rem;">追加情報はありません</span>' : ''}
                     </div>
                 </div>
                 
-                <!-- 编辑按钮 -->
                 <div class="edit-actions">
                     ${isEditing ? `
                         <button type="button" class="btn-small" id="save-profile">💾 保存</button>
@@ -255,27 +233,24 @@ class TenipuriApp {
 
     renderEditField(key, field) {
         const value = field.value || '';
-        switch(field.type) {
-            case 'select':
-                return `<select name="${key}">
-                    ${field.options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('')}
-                </select>`;
-            case 'textarea':
-                return `<textarea name="${key}" rows="3">${value}</textarea>`;
-            default:
-                return `<input type="text" name="${key}" value="${value}" placeholder="${field.label}">`;
+        if (field.type === 'select') {
+            let options = '';
+            for (const o of field.options) {
+                options += `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`;
+            }
+            return `<select name="${key}">${options}</select>`;
+        } else if (field.type === 'textarea') {
+            return `<textarea name="${key}" rows="3">${value}</textarea>`;
+        } else {
+            return `<input type="text" name="${key}" value="${value}" placeholder="${field.label}">`;
         }
     }
-
-    // ==================== 学校页面 ====================
 
     renderSchoolsView() {
         const schools = db.getAllSchools();
         
         return `
-            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 3px solid #000; padding-bottom: 0.5rem;">
-                学校紹介
-            </h2>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 3px solid #000; padding-bottom: 0.5rem;">学校紹介</h2>
             <div class="schools-grid">
                 ${schools.map(s => `
                     <div class="school-card" data-school="${s.id}">
@@ -288,22 +263,10 @@ class TenipuriApp {
                                 ${s.images[0] ? `<img src="${s.images[0].dataUrl}" alt="${s.name}">` : 
                                     `<div style="display:flex;align-items:center;justify-content:center;height:100%;">[学校画像]</div>`}
                             </div>
-                            <div class="school-info-row">
-                                <span>創立</span>
-                                <span>${s.established}</span>
-                            </div>
-                            <div class="school-info-row">
-                                <span>部員数</span>
-                                <span>${s.tennisCourt}</span>
-                            </div>
-                            <div class="school-info-row">
-                                <span>モットー</span>
-                                <span>${s.motto}</span>
-                            </div>
-                            <div class="school-info-row">
-                                <span>画像</span>
-                                <span>${s.images.length}枚</span>
-                            </div>
+                            <div class="school-info-row"><span>創立</span><span>${s.established}</span></div>
+                            <div class="school-info-row"><span>部員数</span><span>${s.tennisCourt}</span></div>
+                            <div class="school-info-row"><span>モットー</span><span>${s.motto}</span></div>
+                            <div class="school-info-row"><span>画像</span><span>${s.images.length}枚</span></div>
                         </div>
                     </div>
                 `).join('')}
@@ -325,13 +288,10 @@ class TenipuriApp {
                     </div>
                 </div>
                 
-                <!-- 学校图片集 -->
                 <div class="school-gallery-section">
                     <div class="gallery-header">
                         <span class="gallery-title">📷 学校公式書画像 (${school.images.length}枚)</span>
-                        <button class="btn-small" onclick="document.getElementById('school-gallery-input').click()">
-                            ＋ 画像追加
-                        </button>
+                        <button class="btn-small" onclick="document.getElementById('school-gallery-input').click()">＋ 画像追加</button>
                     </div>
                     <input type="file" class="hidden-input" id="school-gallery-input" accept="image/*" multiple>
                     <div class="school-gallery" id="school-gallery">
@@ -344,12 +304,11 @@ class TenipuriApp {
                         `).join('')}
                         <div class="gallery-upload" onclick="document.getElementById('school-gallery-input').click()">
                             <span class="upload-icon">📷</span>
-                            <span class="upload-text">学校画像を追加<br>（最大10枚×10ページ分）</span>
+                            <span class="upload-text">学校画像を追加<br>（最大100枚）</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 学校信息 -->
                 <div class="school-info-grid">
                     <div class="info-block">
                         <h3>基本情報</h3>
@@ -369,7 +328,6 @@ class TenipuriApp {
                     </div>
                 </div>
                 
-                <!-- 年間行事 -->
                 <div class="school-timeline">
                     <div class="info-block" style="margin: 0 2rem 2rem;">
                         <h3>年間行事</h3>
@@ -382,7 +340,6 @@ class TenipuriApp {
                     </div>
                 </div>
                 
-                <!-- 所属キャラクター -->
                 <div style="padding: 0 2rem 2rem;">
                     <div class="info-block">
                         <h3>所属キャラクター</h3>
@@ -405,69 +362,59 @@ class TenipuriApp {
     renderToolbar() {
         return `
             <div class="data-toolbar">
-                <button class="toolbar-btn" id="export-btn">
-                    📤 エクスポート
-                </button>
-                <button class="toolbar-btn" id="import-btn">
-                    📥 インポート
-                </button>
+                <button class="toolbar-btn" id="export-btn">📤 エクスポート</button>
+                <button class="toolbar-btn" id="import-btn">📥 インポート</button>
                 <input type="file" class="hidden-input" id="import-file" accept=".json">
             </div>
         `;
     }
 
-    // ==================== 事件绑定 ====================
-
     bindEvents() {
-        // 侧边栏学校折叠
-        document.addEventListener('click', (e) => {
+        const self = this;
+        
+        document.addEventListener('click', function(e) {
+            // 学校折叠
             if (e.target.closest('.school-toggle')) {
                 const btn = e.target.closest('.school-toggle');
                 const schoolId = btn.dataset.school;
-                const list = btn.nextElementSibling;
-                
-                if (this.sidebarCollapsed.has(schoolId)) {
-                    this.sidebarCollapsed.delete(schoolId);
+                if (self.sidebarCollapsed.has(schoolId)) {
+                    self.sidebarCollapsed.delete(schoolId);
                     btn.classList.remove('collapsed');
-                    list.classList.remove('collapsed');
+                    btn.nextElementSibling.classList.remove('collapsed');
                 } else {
-                    this.sidebarCollapsed.add(schoolId);
+                    self.sidebarCollapsed.add(schoolId);
                     btn.classList.add('collapsed');
-                    list.classList.add('collapsed');
+                    btn.nextElementSibling.classList.add('collapsed');
                 }
             }
             
             // 角色选择
             if (e.target.closest('.character-item')) {
-                const charId = e.target.closest('.character-item').dataset.character;
-                this.switchCharacter(charId);
+                self.switchCharacter(e.target.closest('.character-item').dataset.character);
             }
             
-            // 导航切换
+            // 导航
             if (e.target.matches('.nav-tab')) {
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
-                this.currentView = e.target.dataset.view;
-                if (this.currentView === 'school') {
-                    this.currentSchoolId = null;
-                }
-                this.refreshMain();
+                self.currentView = e.target.dataset.view;
+                if (self.currentView === 'school') self.currentSchoolId = null;
+                self.refreshMain();
             }
             
-            // 学校卡片点击
+            // 学校卡片
             if (e.target.closest('.school-card')) {
-                this.currentSchoolId = e.target.closest('.school-card').dataset.school;
-                this.currentView = 'school-detail';
-                this.refreshMain();
+                self.currentSchoolId = e.target.closest('.school-card').dataset.school;
+                self.currentView = 'school-detail';
+                self.refreshMain();
             }
             
-            // 公式书标签切换
+            // 公式书标签
             if (e.target.matches('.book-tab')) {
                 const bookId = e.target.dataset.book;
-                const char = db.getCharacter(this.currentCharacter);
+                const char = db.getCharacter(self.currentCharacter);
                 if (!char.versions[bookId]) {
-                    // 创建新版本
-                    if (confirm(`${bookId} のデータを作成しますか？`)) {
+                    if (confirm(bookId + ' のデータを作成しますか？')) {
                         char.versions[bookId] = db.createVersionData({
                             name: char.displayName,
                             nameKana: char.nameKana || ''
@@ -477,114 +424,81 @@ class TenipuriApp {
                         return;
                     }
                 }
-                this.currentBookId = bookId;
-                this.editingData = null;
-                this.refreshMain();
+                self.currentBookId = bookId;
+                self.editingData = null;
+                self.refreshMain();
             }
             
-            // 编辑按钮
+            // 编辑
             if (e.target.matches('#edit-profile')) {
-                this.editingData = this.currentBookId;
-                this.refreshMain();
+                self.editingData = self.currentBookId;
+                self.refreshMain();
             }
             if (e.target.matches('#cancel-edit')) {
-                this.editingData = null;
-                this.refreshMain();
+                self.editingData = null;
+                self.refreshMain();
             }
             if (e.target.matches('#save-profile')) {
-                this.saveProfile();
+                self.saveProfile();
             }
-            
-            // 添加自定义字段
             if (e.target.matches('#add-custom-field')) {
-                this.addCustomField();
+                self.addCustomField();
             }
-            
-            // 删除自定义字段
             if (e.target.closest('.remove-custom')) {
-                const index = parseInt(e.target.closest('.remove-custom').dataset.index);
-                this.removeCustomField(index);
+                self.removeCustomField(parseInt(e.target.closest('.remove-custom').dataset.index));
             }
             
             // 删除图片
             if (e.target.closest('.img-delete')) {
                 const imageId = e.target.closest('.img-delete').dataset.delete;
-                this.deleteImage(imageId);
+                if (confirm('この画像を削除しますか？')) {
+                    db.removeImage(self.currentCharacter, self.currentBookId, imageId);
+                    self.refreshMain();
+                }
             }
             
             // 图片查看器
             if (e.target.closest('.gallery-item') && !e.target.closest('.img-delete')) {
-                const imageId = e.target.closest('.gallery-item').dataset.image;
-                this.openImageViewer(imageId);
+                self.openImageViewer(e.target.closest('.gallery-item').dataset.image);
             }
             
-            // 添加新公式书
+            // 添加
             if (e.target.matches('#add-new-book') || e.target.matches('#add-book-btn')) {
-                this.showAddBookModal();
+                self.showAddBookModal();
             }
-            
-            // 添加新角色
             if (e.target.matches('#add-character-btn')) {
-                this.showAddCharacterModal();
+                self.showAddCharacterModal();
             }
             
             // 导入导出
             if (e.target.matches('#export-btn')) {
-                this.exportData();
+                self.exportData();
             }
             if (e.target.matches('#import-btn')) {
                 document.getElementById('import-file').click();
             }
         });
 
-        // 文件上传
-        document.addEventListener('change', (e) => {
-            // 画廊图片上传
+        document.addEventListener('change', function(e) {
             if (e.target.matches('#gallery-file-input')) {
-                this.handleGalleryUpload(e.target.files);
+                self.handleGalleryUpload(e.target.files);
             }
-            // 主视觉上传
             if (e.target.matches('#main-visual-input')) {
-                this.handleMainVisualUpload(e.target.files[0]);
+                self.handleMainVisualUpload(e.target.files[0]);
             }
-            // 学校图片上传
             if (e.target.matches('#school-gallery-input')) {
-                this.handleSchoolGalleryUpload(e.target.files);
+                self.handleSchoolGalleryUpload(e.target.files);
             }
-            // 导入文件
             if (e.target.matches('#import-file')) {
-                this.importData(e.target);
-            }
-        });
-
-        // 拖拽上传
-        document.addEventListener('dragover', (e) => {
-            if (e.target.closest('.gallery-upload') || e.target.closest('#gallery-grid')) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-            }
-        });
-        
-        document.addEventListener('drop', (e) => {
-            if (e.target.closest('.gallery-upload') || e.target.closest('#gallery-grid')) {
-                e.preventDefault();
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    this.handleGalleryUpload(files);
-                }
+                self.importData(e.target);
             }
         });
     }
 
     afterRender() {
-        // 滚动到当前公式书
         const activeTab = document.querySelector('.book-tab.active');
-        if (activeTab) {
-            activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-        }
+        if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     }
-
-    // ==================== 操作方法 ====================
 
     switchCharacter(charId) {
         this.currentCharacter = charId;
@@ -604,22 +518,18 @@ class TenipuriApp {
         const char = db.getCharacter(this.currentCharacter);
         const version = char.versions[this.currentBookId];
         
-        // 更新固定字段
         const formData = new FormData(form);
-        for (const [key, field] of Object.entries(version.fixedFields)) {
+        for (const key of Object.keys(version.fixedFields)) {
             const value = formData.get(key);
-            if (value !== null) field.value = value;
+            if (value !== null) version.fixedFields[key].value = value;
         }
         
-        // 更新自定义字段
         version.customFields = [];
         let i = 0;
-        while (formData.has(`custom-label-${i}`)) {
-            const label = formData.get(`custom-label-${i}`);
-            const value = formData.get(`custom-value-${i}`);
-            if (label || value) {
-                version.customFields.push({ label, value });
-            }
+        while (formData.has('custom-label-' + i)) {
+            const label = formData.get('custom-label-' + i);
+            const value = formData.get('custom-value-' + i);
+            if (label || value) version.customFields.push({ label, value });
             i++;
         }
         
@@ -642,39 +552,31 @@ class TenipuriApp {
     }
 
     removeCustomField(index) {
-        // 重新构建表单，移除指定索引
         const container = document.getElementById('custom-fields');
         const rows = container.querySelectorAll('.custom-field-row');
-        if (rows[index]) {
-            rows[index].remove();
-            // 重新索引
-            container.querySelectorAll('.custom-field-row').forEach((row, i) => {
-                row.querySelector('input[name^="custom-label"]').name = `custom-label-${i}`;
-                row.querySelector('input[name^="custom-value"]').name = `custom-value-${i}`;
-                const btn = row.querySelector('.remove-custom');
-                if (btn) btn.dataset.index = i;
-            });
-        }
+        if (rows[index]) rows[index].remove();
+        container.querySelectorAll('.custom-field-row').forEach((row, i) => {
+            const labelInput = row.querySelector('input[name^="custom-label"]');
+            const valueInput = row.querySelector('input[name^="custom-value"]');
+            const btn = row.querySelector('.remove-custom');
+            if (labelInput) labelInput.name = 'custom-label-' + i;
+            if (valueInput) valueInput.name = 'custom-value-' + i;
+            if (btn) btn.dataset.index = i;
+        });
     }
-
-    // ==================== 图片处理 ====================
 
     async handleGalleryUpload(files) {
         const char = db.getCharacter(this.currentCharacter);
         const version = char.versions[this.currentBookId];
-        
         if (version.images.length + files.length > 50) {
             alert('画像は最大50枚までです');
             return;
         }
-        
         for (const file of files) {
             if (!file.type.startsWith('image/')) continue;
-            
             const dataUrl = await this.fileToDataUrl(file);
             db.addImage(this.currentCharacter, this.currentBookId, dataUrl);
         }
-        
         this.refreshMain();
     }
 
@@ -687,25 +589,15 @@ class TenipuriApp {
 
     async handleSchoolGalleryUpload(files) {
         const school = db.getSchool(this.currentSchoolId);
-        
         if (school.images.length + files.length > 100) {
             alert('学校画像は最大100枚までです');
             return;
         }
-        
         for (const file of files) {
             if (!file.type.startsWith('image/')) continue;
-            
             const dataUrl = await this.fileToDataUrl(file);
             db.addSchoolImage(this.currentSchoolId, dataUrl);
         }
-        
-        this.refreshMain();
-    }
-
-    deleteImage(imageId) {
-        if (!confirm('この画像を削除しますか？')) return;
-        db.removeImage(this.currentCharacter, this.currentBookId, imageId);
         this.refreshMain();
     }
 
@@ -721,7 +613,75 @@ class TenipuriApp {
         const char = db.getCharacter(this.currentCharacter);
         const version = char.versions[this.currentBookId];
         const images = version.images;
-        const currentIndex = images.findIndex(img => img.id === imageId);
+        let currentIndex = images.findIndex(img => img.id === imageId);
         
         const viewer = document.createElement('div');
+        viewer.className = 'image-viewer';
+        viewer.id = 'image-viewer';
         
+        const updateViewer = (index) => {
+            const img = images[index];
+            let navHtml = '';
+            if (index > 0) navHtml += `<button class="viewer-nav prev" data-nav="-1">◀</button>`;
+            if (index < images.length - 1) navHtml += `<button class="viewer-nav next" data-nav="1">▶</button>`;
+            
+            viewer.querySelector('.viewer-content').innerHTML = `
+                <button class="viewer-close" onclick="document.getElementById('image-viewer').remove()">×</button>
+                ${navHtml}
+                <img src="${img.dataUrl}" alt="${index + 1}">
+                <span class="viewer-counter">${index + 1} / ${images.length}</span>
+            `;
+            viewer.dataset.current = index;
+        };
+        
+        viewer.innerHTML = '<div class="viewer-content"></div>';
+        document.body.appendChild(viewer);
+        updateViewer(currentIndex);
+        
+        viewer.addEventListener('click', (e) => {
+            if (e.target.matches('.viewer-nav')) {
+                const newIndex = parseInt(viewer.dataset.current) + parseInt(e.target.dataset.nav);
+                if (newIndex >= 0 && newIndex < images.length) updateViewer(newIndex);
+            }
+        });
+    }
+
+    showAddBookModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h2>新規公式書バージョン</h2>
+                <div class="form-group">
+                    <label>バージョンID（例: 50.5, npo30.5）</label>
+                    <input type="text" id="new-book-id" placeholder="50.5">
+                </div>
+                <div class="form-group">
+                    <label>表示名</label>
+                    <input type="text" id="new-book-name" placeholder="50.5">
+                </div>
+                <div class="form-group">
+                    <label>シリーズ</label>
+                    <select id="new-book-series">
+                        <option value="original">テニスの王子様</option>
+                        <option value="new">新テニスの王子様</option>
+                        <option value="other">その他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>発行年（任意）</label>
+                    <input type="number" id="new-book-year" placeholder="2005">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-small" onclick="this.closest('.modal-overlay').remove()">キャンセル</button>
+                    <button class="btn-small" id="confirm-add-book">追加</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelector('#confirm-add-book').addEventListener('click', () => {
+            const id = document.getElementById('new-book-id').value;
+            const name = document.getElementById('new-book-name').value || id;
+            const series = document.getElementById('new-book-series').value;
+            const 
