@@ -1,0 +1,4 @@
+data/user-*.json
+.DS_Store
+*.swp
+
