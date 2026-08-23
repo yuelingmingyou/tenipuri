@@ -684,4 +684,102 @@ class TenipuriApp {
             const id = document.getElementById('new-book-id').value;
             const name = document.getElementById('new-book-name').value || id;
             const series = document.getElementById('new-book-series').value;
-            const 
+            const year = parseInt(document.getElementById('new-book-year').value) || new Date().getFullYear();
+            
+            if (!id) { alert('IDを入力してください'); return; }
+            
+            db.addBook({ id: id, name: name, year: year, title: 'テニスの王子様 ' + name, series: series });
+            modal.remove();
+            this.render();
+        });
+    }
+
+    showAddCharacterModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h2>新規キャラクター</h2>
+                <div class="form-group">
+                    <label>名前</label>
+                    <input type="text" id="new-char-name" placeholder="越前リョーマ">
+                </div>
+                <div class="form-group">
+                    <label>ふりがな</label>
+                    <input type="text" id="new-char-kana" placeholder="えちぜんりょうま">
+                </div>
+                <div class="form-group">
+                    <label>所属学校</label>
+                    <select id="new-char-school">
+                        ${db.getAllSchools().map(s => '<option value="' + s.id + '">' + s.name + '</option>').join('')}
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-small" onclick="this.closest('.modal-overlay').remove()">キャンセル</button>
+                    <button class="btn-small" id="confirm-add-char">追加</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelector('#confirm-add-char').addEventListener('click', () => {
+            const name = document.getElementById('new-char-name').value;
+            const kana = document.getElementById('new-char-kana').value;
+            const schoolId = document.getElementById('new-char-school').value;
+            
+            if (!name) { alert('名前を入力してください'); return; }
+            
+            const id = 'char_' + Date.now();
+            const versions = {};
+            db.getAllBooks().forEach(b => {
+                versions[b.id] = db.createVersionData({ name: name, nameKana: kana });
+            });
+            
+            db.addCharacter(id, name, schoolId, versions);
+            modal.remove();
+            this.currentCharacter = id;
+            this.render();
+        });
+    }
+
+    exportData() {
+        const data = db.exportData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tenipuri-fanbook-' + new Date().toISOString().split('T')[0] + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (confirm('既存のデータを上書きしますか？（現在のデータは失われます）')) {
+                    db.importData(data);
+                    this.currentCharacter = db.getAllCharacters()[0]?.id || 'echizen';
+                    this.currentBookId = Object.keys(db.getCharacter(this.currentCharacter)?.versions || {})[0] || '10.5';
+                    this.render();
+                    alert('データをインポートしました');
+                }
+            } catch (err) {
+                alert('インポートに失敗しました: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    }
+}
+
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.loadAdditionalCharacters) loadAdditionalCharacters();
+    app = new TenipuriApp();
+});
+
