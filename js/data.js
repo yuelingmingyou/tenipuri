@@ -612,4 +612,473 @@ class TenipuriDatabase {
         this.addCharacter('kamio', '神尾アキラ', 'fudomine', {
             '10.5': { birthday: '8月26日', height: '165', weight: '52', bloodType: 'O',
                 playStyle: 'スピードプレーヤー', dominantHand: '右',
-                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZ
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'カレーパン、牛乳', hobby: 'ダンス、音楽鑑賞',
+                favoriteColor: 'オレンジ', favoriteType: '元気な人',
+                strongSubject: '音楽', family: '父、母、妹',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('ibuki', '伊武深司', 'fudomine', {
+            '10.5': { birthday: '11月3日', height: '165', weight: '55', bloodType: 'AB',
+                playStyle: 'カウンター', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'おにぎり、緑茶', hobby: '読書、将棋',
+                favoriteColor: '紫', favoriteType: '知的な人',
+                strongSubject: '国語', family: '父、母',
+                fatherOccupation: '公務員' }
+        });
+
+        this.addCharacter('ishida_tetsu', '石田鉄', 'fudomine', {
+            '10.5': { birthday: '11月30日', height: '188', weight: '80', bloodType: 'O',
+                playStyle: 'パワープレーヤー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'ステーキ、焼肉', hobby: '筋トレ、料理',
+                favoriteColor: '茶色', favoriteType: '健康な人',
+                strongSubject: '体育', family: '父、母、弟',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('sakurai', '桜井雅也', 'fudomine', {
+            '10.5': { birthday: '7月1日', height: '164', weight: '53', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: '寿司、天ぷら', hobby: '映画鑑賞、散歩',
+                favoriteColor: '青', favoriteType: '優しい人',
+                strongSubject: '英語', family: '父、母、妹',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('uchimura', '内村京介', 'fudomine', {
+            '10.5': { birthday: '5月21日', height: '172', weight: '60', bloodType: 'B',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'ラーメン、餃子', hobby: 'ゲーム、カラオケ',
+                favoriteColor: '赤', favoriteType: '明るい人',
+                strongSubject: '数学', family: '父、母',
+                fatherOccupation: '自営業' }
+        });
+
+        this.addCharacter('mori', '森辰徳', 'fudomine', {
+            '10.5': { birthday: '4月18日', height: '176', weight: '63', bloodType: 'A',
+                playStyle: 'ディフェンス', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'うどん、おにぎり', hobby: '読書、園芸',
+                favoriteColor: '緑', favoriteType: '落ち着いた人',
+                strongSubject: '生物', family: '父、母、姉',
+                fatherOccupation: '会社員' }
+        });
+
+        // 山吹
+        this.addCharacter('sengoku', '千石清純', 'yamabuki', {
+            '10.5': { birthday: '11月20日', height: '170', weight: '59', bloodType: 'O',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: '納豆、キムチ', hobby: 'ギャンブル、占い',
+                favoriteColor: '紫', favoriteType: '運命の人',
+                strongSubject: '数学', family: '父、母、姉',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('akutsu', '亜久津仁', 'yamabuki', {
+            '10.5': { birthday: '4月2日', height: '183', weight: '72', bloodType: 'B',
+                playStyle: 'アグレッシブベースライナー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: '焼肉、エナジードリンク', hobby: '格闘技、バイク',
+                favoriteColor: '黒', favoriteType: '強い人',
+                strongSubject: '体育', family: '母',
+                fatherOccupation: '不明' }
+        });
+
+        this.addCharacter('muromachi', '室町十次', 'yamabuki', {
+            '10.5': { birthday: '4月14日', height: '165', weight: '55', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: '和食全般', hobby: '将棋、囲碁',
+                favoriteColor: '茶色', favoriteType: '真面目な人',
+                strongSubject: '社会', family: '父、母、弟',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('minami', '南健太郎', 'yamabuki', {
+            '10.5': { birthday: '7月3日', height: '178', weight: '66', bloodType: 'A',
+                playStyle: 'ディフェンス', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'そば、天ぷら', hobby: '読書、散歩',
+                favoriteColor: '青', favoriteType: '優しい人',
+                strongSubject: '国語', family: '父、母、妹',
+                fatherOccupation: '公務員' }
+        });
+
+        this.addCharacter('higashikata', '東方雅美', 'yamabuki', {
+            '10.5': { birthday: '9月10日', height: '187', weight: '78', bloodType: 'O',
+                playStyle: 'パワープレーヤー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'カレー、ハンバーグ', hobby: '筋トレ、サッカー観戦',
+                favoriteColor: '赤', favoriteType: 'スポーティな人',
+                strongSubject: '体育', family: '父、母、弟',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('ninyou', '新渡米稲吉', 'yamabuki', {
+            '10.5': { birthday: '8月8日', height: '168', weight: '58', bloodType: 'B',
+                playStyle: 'オールラウンダー', dominantHand: '左',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: 'お好み焼き、たこ焼き', hobby: 'ゲーム、漫画',
+                favoriteColor: '緑', favoriteType: '面白い人',
+                strongSubject: '美術', family: '父、母、妹',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('kita', '喜多一馬', 'yamabuki', {
+            '10.5': { birthday: '2月12日', height: '179', weight: '67', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'MIZUNO (PRO LIGHT S-90)', shoes: 'MIZUNO (WAVE DUAL WIDE)',
+                favoriteFood: '寿司、刺身', hobby: '釣り、キャンプ',
+                favoriteColor: '青', favoriteType: 'アウトドアな人',
+                strongSubject: '理科', family: '父、母、弟',
+                fatherOccupation: '自営業' }
+        });
+
+        // 六角
+        this.addCharacter('saeki', '佐伯虎次郎', 'rokaku', {
+            '10.5': { birthday: '10月1日', height: '174', weight: '61', bloodType: 'O',
+                playStyle: 'サーブ＆ボレーヤー', dominantHand: '左',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'おから、焼きうに（半生）', hobby: '海あそび',
+                favoriteColor: '白、ベージュ', favoriteType: '束縛する人（フリーにしちゃダメ）',
+                strongSubject: '社会、国語', family: '父、母、姉',
+                fatherOccupation: 'エンジニア' }
+        });
+
+        this.addCharacter('kurobane', '黒羽春風', 'rokaku', {
+            '10.5': { birthday: '9月29日', height: '184', weight: '73', bloodType: 'A',
+                playStyle: 'サーブ＆ボレーヤー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: '焼きもろこし', hobby: '海あそび',
+                favoriteColor: '赤', favoriteType: '楽しいヤツ',
+                strongSubject: '数学、体育', family: '父、母、弟、犬',
+                fatherOccupation: '会社員（メーカー）' }
+        });
+
+        this.addCharacter('amane', '天根ヒカル', 'rokaku', {
+            '10.5': { birthday: '11月22日', height: '180', weight: '69', bloodType: 'B',
+                playStyle: 'パワープレーヤー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: '肉じゃが、コロッケ', hobby: 'ギャグ作り、釣り',
+                favoriteColor: '黄', favoriteType: '笑ってくれる人',
+                strongSubject: '国語', family: '父、母、妹',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('kisarazu', '木更津亮', 'rokaku', {
+            '10.5': { birthday: '11月20日', height: '172', weight: '60', bloodType: 'O',
+                playStyle: 'トリックプレーヤー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'たこ焼き、お好み焼き', hobby: 'ゲーム、カラオケ',
+                favoriteColor: '緑', favoriteType: '明るい人',
+                strongSubject: '数学', family: '父、母、弟（淳）',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('itsuki', '樹希彦', 'rokaku', {
+            '10.5': { birthday: '8月5日', height: '174', weight: '62', bloodType: 'AB',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'パスタ、ピザ', hobby: '映画鑑賞、音楽',
+                favoriteColor: '紫', favoriteType: '芸術的な人',
+                strongSubject: '美術', family: '父、母、姉',
+                fatherOccupation: 'デザイナー' }
+        });
+
+        this.addCharacter('shudou', '首藤聡', 'rokaku', {
+            '10.5': { birthday: '4月15日', height: '176', weight: '65', bloodType: 'A',
+                playStyle: 'ディフェンス', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: '魚料理、味噌汁', hobby: '釣り、園芸',
+                favoriteColor: '青', favoriteType: '落ち着いた人',
+                strongSubject: '生物', family: '父、母、妹',
+                fatherOccupation: '会社員' }
+        });
+
+        // 聖ルドルフ
+        this.addCharacter('mizuki', '観月はじめ', 'josei', {
+            '10.5': { birthday: '5月15日', height: '166', weight: '52', bloodType: 'B',
+                playStyle: 'データテニス', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'ズッキーニ', hobby: 'データ収集、カメラ',
+                favoriteColor: '白', favoriteType: '計算できる人',
+                strongSubject: '数学、情報', family: '父、母、兄',
+                fatherOccupation: '会社経営者' }
+        });
+
+        this.addCharacter('fuji_yuuta', '不二裕太', 'josei', {
+            '10.5': { birthday: '2月18日', height: '170', weight: '60', bloodType: 'B',
+                playStyle: 'レフトハンドプレーヤー', dominantHand: '左',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'カレー、コロッケ', hobby: 'ゲーム、スケボー',
+                favoriteColor: '赤', favoriteType: '元気な人',
+                strongSubject: '体育', family: '父、母、兄（周助）、姉',
+                fatherOccupation: '会社員' }
+        });
+
+        this.addCharacter('yanagisawa', '柳沢慎也', 'josei', {
+            '10.5': { birthday: '12月9日', height: '169', weight: '57', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: '焼き魚、味噌汁', hobby: '将棋、読書',
+                favoriteColor: '茶色', favoriteType: '真面目な人',
+                strongSubject: '国語', family: '父、母、弟',
+                fatherOccupation: '公務員' }
+        });
+
+        this.addCharacter('kisarazu_atsushi', '木更津淳', 'josei', {
+            '10.5': { birthday: '11月20日', height: '172', weight: '60', bloodType: 'O',
+                playStyle: 'トリックプレーヤー', dominantHand: '右',
+                racket: 'YONEX (Muscle Power 99)', shoes: 'YONEX (POWER CUSHION 199)',
+                favoriteFood: 'たこ焼き', hobby: 'ゲーム、カラオケ',
+                favoriteColor: '緑', favoriteType: '明るい人',
+                strongSubject: '数学', family: '父、母、兄（亮）',
+                fatherOccupation: '会社員' }
+        });
+
+        // 比嘉中
+        this.addCharacter('kai', '木手永四郎', 'higa', {
+            '10.5': { birthday: '3月31日', height: '180', weight: '72', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'BRIDGESTONE', shoes: 'MIZUNO',
+                favoriteFood: 'ゴーヤーチャンプルー', hobby: '沖縄三線、ダイビング',
+                favoriteColor: '紺', favoriteType: '沖縄の文化を大切にする人',
+                strongSubject: '社会', family: '父、母、弟',
+                fatherOccupation: '漁師' }
+        });
+
+        // U-17 キャンプ
+        this.addCharacter('onii', '鬼十次郎', 'u17', {
+            'npo10.5': { birthday: '4月1日', height: '185', weight: '80', bloodType: 'O',
+                playStyle: 'パワープレーヤー', dominantHand: '右',
+                racket: 'HEAD', shoes: 'NIKE',
+                favoriteFood: '焼肉、ビフテキ', hobby: '筋トレ、格闘技観戦',
+                favoriteColor: '赤', favoriteType: '強い人',
+                strongSubject: '体育', family: '不明',
+                fatherOccupation: '不明' }
+        });
+
+        this.addCharacter('tokugawa', '徳川カズヤ', 'u17', {
+            'npo10.5': { birthday: '5月21日', height: '178', weight: '68', bloodType: 'A',
+                playStyle: 'オールラウンダー', dominantHand: '右',
+                racket: 'BABOLAT', shoes: 'ADIDAS',
+                favoriteFood: '寿司、和食', hobby: '読書、茶道',
+                favoriteColor: '黒', favoriteType: '落ち着いた人',
+                strongSubject: '全科目', family: '父、母',
+                fatherOccupation: '外交官' }
+        });
+
+        this.addCharacter('ryoga', '越前リョーガ', 'u17', {
+            'npo10.5': { birthday: '12月24日', height: '180', weight: '70', bloodType: 'O',
+                playStyle: 'オールラウンダー', dominantHand: '左',
+                racket: 'BRIDGESTONE', shoes: 'FILA',
+                favoriteFood: '焼き魚、お茶漬け', hobby: 'テニス、旅',
+                favoriteColor: '銀', favoriteType: '自由な人',
+                strongSubject: '英語', family: '父、母、弟（リョーマ）',
+                fatherOccupation: '元プロテニス選手' }
+        });
+    }
+
+    // 图片管理
+    addImage(charId, bookId, imageData) {
+        const char = this.characters.get(charId);
+        if (!char) return null;
+        
+        const version = char.versions[bookId];
+        if (!version) return null;
+        
+        const image = {
+            id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            dataUrl: imageData,
+            caption: '',
+            uploadDate: new Date().toISOString(),
+            order: version.images.length
+        };
+        
+        version.images.push(image);
+        this.saveToLocalStorage();
+        return image;
+    }
+
+    removeImage(charId, bookId, imageId) {
+        const char = this.characters.get(charId);
+        if (!char) return false;
+        
+        const version = char.versions[bookId];
+        if (!version) return false;
+        
+        version.images = version.images.filter(img => img.id !== imageId);
+        version.images.forEach((img, i) => img.order = i);
+        
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    addSchoolImage(schoolId, imageData) {
+        const school = this.schools.get(schoolId);
+        if (!school) return null;
+        
+        const image = {
+            id: 'sch_img_' + Date.now(),
+            dataUrl: imageData,
+            caption: '',
+            uploadDate: new Date().toISOString(),
+            pageNumber: school.images.length + 1
+        };
+        
+        school.images.push(image);
+        this.saveToLocalStorage();
+        return image;
+    }
+
+    removeSchoolImage(schoolId, imageId) {
+        const school = this.schools.get(schoolId);
+        if (!school) return false;
+        
+        school.images = school.images.filter(img => img.id !== imageId);
+        school.images.forEach((img, i) => img.pageNumber = i + 1);
+        
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    addSchoolMap(schoolId, imageData, label) {
+        const school = this.schools.get(schoolId);
+        if (!school) return null;
+        
+        const map = {
+            id: 'map_' + Date.now(),
+            dataUrl: imageData,
+            label: label || '学校周辺マップ',
+            uploadDate: new Date().toISOString()
+        };
+        
+        school.maps.push(map);
+        this.saveToLocalStorage();
+        return map;
+    }
+
+    removeSchoolMap(schoolId, mapId) {
+        const school = this.schools.get(schoolId);
+        if (!school) return false;
+        
+        school.maps = school.maps.filter(m => m.id !== mapId);
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    updateSchoolTimeline(schoolId, timeline) {
+        const school = this.schools.get(schoolId);
+        if (!school) return false;
+        
+        school.annualEvents = timeline;
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    addBook(bookData) {
+        const id = bookData.id || 'book_' + Date.now();
+        this.books.set(id, Object.assign({}, bookData, { id: id }));
+        this.saveToLocalStorage();
+        return id;
+    }
+
+    getCharactersBySchool() {
+        const result = new Map();
+        for (const [id, school] of this.schools) {
+            result.set(id, {
+                school: school,
+                characters: []
+            });
+        }
+        
+        for (const [id, char] of this.characters) {
+            const group = result.get(char.schoolId);
+            if (group) {
+                group.characters.push(char);
+            } else {
+                if (!result.has('other')) {
+                    result.set('other', {
+                        school: { id: 'other', name: 'その他', color: '#666' },
+                        characters: []
+                    });
+                }
+                result.get('other').characters.push(char);
+            }
+        }
+        
+        return result;
+    }
+
+    getCharacter(id) { return this.characters.get(id); }
+    getSchool(id) { return this.schools.get(id); }
+    getAllSchools() { return Array.from(this.schools.values()); }
+    getAllCharacters() { return Array.from(this.characters.values()); }
+    getAllBooks() { return Array.from(this.books.values()); }
+
+    updateCharacterVersion(charId, bookId, versionData) {
+        const char = this.characters.get(charId);
+        if (!char) return false;
+        char.versions[bookId] = versionData;
+        char.updatedAt = Date.now();
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    exportData() {
+        return {
+            version: '2.0',
+            exportDate: new Date().toISOString(),
+            characters: Array.from(this.characters.entries()),
+            schools: Array.from(this.schools.entries()),
+            books: Array.from(this.books.entries())
+        };
+    }
+
+    importData(data) {
+        if (data.characters) this.characters = new Map(data.characters);
+        if (data.schools) this.schools = new Map(data.schools);
+        if (data.books) this.books = new Map(data.books);
+        this.saveToLocalStorage();
+        return true;
+    }
+
+    saveToLocalStorage() {
+        try {
+            const data = this.exportData();
+            localStorage.setItem(DB_NAME, JSON.stringify(data));
+        } catch (e) {
+            console.error('保存失败:', e);
+            alert('データが大きすぎて保存できません。画像を減らしてください。');
+        }
+    }
+
+    loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(DB_NAME);
+            if (saved) {
+                const data = JSON.parse(saved);
+                this.importData(data);
+                return true;
+            }
+        } catch (e) {
+            console.error('读取失败:', e);
+        }
+        return false;
+    }
+}
+
+const db = new TenipuriDatabase();
+if (db.characters.size === 0) {
+    db.initDefaultData();
+}
+
+window.tenipuriDB = db;
+window.FIXED_FIELDS_TEMPLATE = FIXED_FIELDS_TEMPLATE;
+
