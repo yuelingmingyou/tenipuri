@@ -1,4 +1,4 @@
-// ==================== 网球王子公式书网站 - 修复版 ====================
+// ==================== 网球王子公式书网站 - app.js 第一部分 ====================
 
 class TenipuriApp {
     constructor() {
@@ -8,6 +8,7 @@ class TenipuriApp {
         this.currentSchoolId = null;
         this.editingData = null;
         this.sidebarCollapsed = new Set();
+        this.schoolEditing = false;
         
         this.init();
     }
@@ -245,7 +246,6 @@ class TenipuriApp {
             return `<input type="text" name="${key}" value="${value}" placeholder="${field.label}">`;
         }
     }
-
     renderSchoolsView() {
         const schools = db.getAllSchools();
         
@@ -278,6 +278,8 @@ class TenipuriApp {
         const school = db.getSchool(this.currentSchoolId);
         if (!school) return '<div class="empty-state">学校が見つかりません</div>';
         
+        const isEditing = this.schoolEditing;
+        
         return `
             <div class="school-detail">
                 <div class="school-detail-header" style="background: ${school.color};">
@@ -288,6 +290,7 @@ class TenipuriApp {
                     </div>
                 </div>
                 
+                <!-- 学校画像 -->
                 <div class="school-gallery-section">
                     <div class="gallery-header">
                         <span class="gallery-title">📷 学校公式書画像 (${school.images.length}枚)</span>
@@ -309,6 +312,29 @@ class TenipuriApp {
                     </div>
                 </div>
                 
+                <!-- 学校地图 -->
+                <div class="map-section">
+                    <div class="gallery-header">
+                        <span class="gallery-title">🗺️ 学校周辺マップ (${school.maps.length}枚)</span>
+                        <button class="btn-small" onclick="document.getElementById('map-input').click()">＋ マップ追加</button>
+                    </div>
+                    <input type="file" class="hidden-input" id="map-input" accept="image/*">
+                    <div class="map-grid" id="map-grid">
+                        ${school.maps.map(map => `
+                            <div class="map-item" data-map="${map.id}">
+                                <img src="${map.dataUrl}" alt="${map.label}">
+                                <span class="map-label">${map.label}</span>
+                                <button class="img-delete" data-delete-map="${map.id}" style="position:absolute;top:4px;right:4px;">×</button>
+                            </div>
+                        `).join('')}
+                        <div class="map-upload" onclick="document.getElementById('map-input').click()">
+                            <span class="upload-icon">🗺️</span>
+                            <span class="upload-text">マップを追加</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 基本信息 -->
                 <div class="school-info-grid">
                     <div class="info-block">
                         <h3>基本情報</h3>
@@ -328,18 +354,34 @@ class TenipuriApp {
                     </div>
                 </div>
                 
+                <!-- 年間行事 - 可编辑 -->
                 <div class="school-timeline">
                     <div class="info-block" style="margin: 0 2rem 2rem;">
-                        <h3>年間行事</h3>
-                        ${school.annualEvents.map(e => `
-                            <div class="timeline-item">
-                                <span class="timeline-month">${e.month}</span>
-                                <span class="timeline-content">${e.event}</span>
-                            </div>
-                        `).join('')}
+                        <h3>
+                            年間行事
+                            ${isEditing ? 
+                                `<button class="btn-small timeline-edit-btn" id="save-timeline">💾 保存</button>` :
+                                `<button class="btn-small timeline-edit-btn" id="edit-timeline">✏️ 編集</button>`
+                            }
+                        </h3>
+                        <div id="timeline-container">
+                            ${school.annualEvents.map((e, i) => `
+                                <div class="timeline-item" data-index="${i}">
+                                    <span class="timeline-month">
+                                        ${isEditing ? `<input type="text" value="${e.month}" class="timeline-month-input" style="width:60px;">` : e.month}
+                                    </span>
+                                    <span class="timeline-content">
+                                        ${isEditing ? `<input type="text" value="${e.event}" class="timeline-event-input">` : e.event}
+                                    </span>
+                                    ${isEditing ? `<button class="timeline-delete-btn" data-delete-index="${i}">削除</button>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${isEditing ? `<button class="timeline-add-btn" id="add-timeline-item">＋ 行事を追加</button>` : ''}
                     </div>
                 </div>
                 
+                <!-- 所属キャラクター -->
                 <div style="padding: 0 2rem 2rem;">
                     <div class="info-block">
                         <h3>所属キャラクター</h3>
@@ -368,7 +410,6 @@ class TenipuriApp {
             </div>
         `;
     }
-
     bindEvents() {
         const self = this;
         
@@ -393,7 +434,7 @@ class TenipuriApp {
                 self.switchCharacter(e.target.closest('.character-item').dataset.character);
             }
             
-            // 导航
+            // 导航切换
             if (e.target.matches('.nav-tab')) {
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
@@ -406,6 +447,7 @@ class TenipuriApp {
             if (e.target.closest('.school-card')) {
                 self.currentSchoolId = e.target.closest('.school-card').dataset.school;
                 self.currentView = 'school-detail';
+                self.schoolEditing = false;
                 self.refreshMain();
             }
             
@@ -429,7 +471,7 @@ class TenipuriApp {
                 self.refreshMain();
             }
             
-            // 编辑
+            // 编辑按钮
             if (e.target.matches('#edit-profile')) {
                 self.editingData = self.currentBookId;
                 self.refreshMain();
@@ -457,12 +499,36 @@ class TenipuriApp {
                 }
             }
             
+            // 删除地图
+            if (e.target.closest('[data-delete-map]')) {
+                const mapId = e.target.closest('[data-delete-map]').dataset.deleteMap;
+                if (confirm('このマップを削除しますか？')) {
+                    db.removeSchoolMap(self.currentSchoolId, mapId);
+                    self.refreshMain();
+                }
+            }
+            
             // 图片查看器
             if (e.target.closest('.gallery-item') && !e.target.closest('.img-delete')) {
                 self.openImageViewer(e.target.closest('.gallery-item').dataset.image);
             }
             
-            // 添加
+            // 时间线编辑
+            if (e.target.matches('#edit-timeline')) {
+                self.schoolEditing = true;
+                self.refreshMain();
+            }
+            if (e.target.matches('#save-timeline')) {
+                self.saveTimeline();
+            }
+            if (e.target.matches('#add-timeline-item')) {
+                self.addTimelineItem();
+            }
+            if (e.target.closest('.timeline-delete-btn')) {
+                self.deleteTimelineItem(parseInt(e.target.closest('.timeline-delete-btn').dataset.deleteIndex));
+            }
+            
+            // 添加按钮
             if (e.target.matches('#add-new-book') || e.target.matches('#add-book-btn')) {
                 self.showAddBookModal();
             }
@@ -489,6 +555,9 @@ class TenipuriApp {
             if (e.target.matches('#school-gallery-input')) {
                 self.handleSchoolGalleryUpload(e.target.files);
             }
+            if (e.target.matches('#map-input')) {
+                self.handleMapUpload(e.target.files[0]);
+            }
             if (e.target.matches('#import-file')) {
                 self.importData(e.target);
             }
@@ -512,7 +581,6 @@ class TenipuriApp {
         document.getElementById('main-content').innerHTML = this.renderCurrentView();
         this.afterRender();
     }
-
     saveProfile() {
         const form = document.getElementById('profile-form');
         const char = db.getCharacter(this.currentCharacter);
@@ -565,6 +633,53 @@ class TenipuriApp {
         });
     }
 
+    // 时间线操作
+    saveTimeline() {
+        const container = document.getElementById('timeline-container');
+        const items = container.querySelectorAll('.timeline-item');
+        const newTimeline = [];
+        
+        items.forEach(item => {
+            const monthInput = item.querySelector('.timeline-month-input');
+            const eventInput = item.querySelector('.timeline-event-input');
+            if (monthInput && eventInput) {
+                newTimeline.push({
+                    month: monthInput.value,
+                    event: eventInput.value
+                });
+            }
+        });
+        
+        db.updateSchoolTimeline(this.currentSchoolId, newTimeline);
+        this.schoolEditing = false;
+        this.refreshMain();
+    }
+
+    addTimelineItem() {
+        const container = document.getElementById('timeline-container');
+        const index = container.querySelectorAll('.timeline-item').length;
+        const row = document.createElement('div');
+        row.className = 'timeline-item';
+        row.dataset.index = index;
+        row.innerHTML = `
+            <span class="timeline-month"><input type="text" value="" class="timeline-month-input" style="width:60px;" placeholder="月"></span>
+            <span class="timeline-content"><input type="text" value="" class="timeline-event-input" placeholder="行事名"></span>
+            <button class="timeline-delete-btn" data-delete-index="${index}">削除</button>
+        `;
+        container.appendChild(row);
+    }
+
+    deleteTimelineItem(index) {
+        const container = document.getElementById('timeline-container');
+        const rows = container.querySelectorAll('.timeline-item');
+        if (rows[index]) rows[index].remove();
+        // 重新索引
+        container.querySelectorAll('.timeline-item').forEach((row, i) => {
+            row.dataset.index = i;
+            const btn = row.querySelector('.timeline-delete-btn');
+            if (btn) btn.dataset.deleteIndex = i;
+        });
+    }
     async handleGalleryUpload(files) {
         const char = db.getCharacter(this.currentCharacter);
         const version = char.versions[this.currentBookId];
@@ -598,6 +713,14 @@ class TenipuriApp {
             const dataUrl = await this.fileToDataUrl(file);
             db.addSchoolImage(this.currentSchoolId, dataUrl);
         }
+        this.refreshMain();
+    }
+
+    async handleMapUpload(file) {
+        if (!file) return;
+        const dataUrl = await this.fileToDataUrl(file);
+        const label = prompt('マップのラベルを入力してください（例: 学校周辺マップ）:', '学校周辺マップ');
+        db.addSchoolMap(this.currentSchoolId, dataUrl, label || '学校周辺マップ');
         this.refreshMain();
     }
 
@@ -645,7 +768,6 @@ class TenipuriApp {
             }
         });
     }
-
     showAddBookModal() {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -782,4 +904,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.loadAdditionalCharacters) loadAdditionalCharacters();
     app = new TenipuriApp();
 });
-
