@@ -904,3 +904,312 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.loadAdditionalCharacters) loadAdditionalCharacters();
     app = new TenipuriApp();
 });
+
+// ==================== app.js 第一部分：渲染框架 ====================
+
+class TenipuriApp {
+    constructor() {
+        this.currentView = 'character';
+        this.currentCharacter = 'echizen';
+        this.currentBookId = '10.5';
+        this.currentSchoolId = null;
+        this.editingData = null;
+        this.sidebarCollapsed = new Set();
+        this.schoolEditing = false;
+        this.bookEditing = false; // 新增：公式书编辑模式
+        
+        this.init();
+    }
+
+    init() {
+        this.render();
+        this.bindEvents();
+    }
+
+    render() {
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="app-container">
+                ${this.renderSidebar()}
+                <div class="main-area">
+                    ${this.renderTopNav()}
+                    <div class="content-wrapper" id="main-content">
+                        ${this.renderCurrentView()}
+                    </div>
+                </div>
+            </div>
+            ${this.renderToolbar()}
+        `;
+        this.afterRender();
+    }
+
+    renderSidebar() {
+        const groups = db.getCharactersBySchool();
+        let html = '';
+        
+        for (const [schoolId, group] of groups) {
+            const collapsed = this.sidebarCollapsed.has(schoolId);
+            html += `
+                <div class="school-group">
+                    <button class="school-toggle ${collapsed ? 'collapsed' : ''}" data-school="${schoolId}">
+                        <span>
+                            <span class="school-icon ${schoolId}">${group.school.name.charAt(0)}</span>
+                            ${group.school.name}
+                        </span>
+                        <span style="font-size: 0.75rem; opacity: 0.6;">${group.characters.length}人</span>
+                    </button>
+                    <div class="character-list ${collapsed ? 'collapsed' : ''}">
+                        ${group.characters.map(char => `
+                            <div class="character-item ${char.id === this.currentCharacter ? 'active' : ''}"
+                                 data-character="${char.id}">
+                                ${char.displayName}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        return `
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">
+                        公式書DB
+                        <span class="ruby">FANBOOK DB</span>
+                    </div>
+                </div>
+                ${html}
+                <div class="sidebar-footer">
+                    <button class="add-btn" id="add-character-btn">＋ キャラ追加</button>
+                </div>
+            </aside>
+        `;
+    }
+
+    renderTopNav() {
+        return `
+            <nav class="top-nav">
+                <span class="nav-logo">テニプリDB</span>
+                <div class="nav-tabs">
+                    <button class="nav-tab ${this.currentView === 'character' ? 'active' : ''}" data-view="character">キャラ</button>
+                    <button class="nav-tab ${this.currentView.startsWith('school') ? 'active' : ''}" data-view="school">学校</button>
+                </div>
+            </nav>
+        `;
+    }
+
+    renderCurrentView() {
+        switch(this.currentView) {
+            case 'character': return this.renderCharacterView();
+            case 'school': return this.renderSchoolsView();
+            case 'school-detail': return this.renderSchoolDetailView();
+            default: return this.renderCharacterView();
+        }
+    }
+
+    // 获取角色有效的公式书版本（只显示该角色有的版本）
+    getCharacterBooks(char) {
+        const allBooks = db.getAllBooks();
+        const charBooks = Object.keys(char.versions);
+        return allBooks.filter(b => charBooks.includes(b.id));
+    }
+
+    renderCharacterView() {
+        const char = db.getCharacter(this.currentCharacter);
+        if (!char) return '<div class="empty-state">キャラクターを選択してください</div>';
+        
+        const version = char.versions[this.currentBookId];
+        if (!version) {
+            // 当前选中的版本不存在，切换到第一个可用版本
+            const firstBookId = Object.keys(char.versions)[0];
+            if (firstBookId) {
+                this.currentBookId = firstBookId;
+                return this.renderCharacterView(); // 重新渲染
+            }
+            return '<div class="empty-state">このキャラクターのデータがありません</div>';
+        }
+        
+        const books = this.getCharacterBooks(char);
+        const currentIndex = books.findIndex(b => b.id === this.currentBookId);
+        const prevBook = books[currentIndex - 1];
+        const nextBook = books[currentIndex + 1];
+        
+        return `
+            <div class="character-page">
+                <!-- 箭头切换公式书版本 -->
+                <div class="book-navigator">
+                    <button class="book-arrow ${prevBook ? '' : 'disabled'}" 
+                            data-book="${prevBook ? prevBook.id : ''}" 
+                            ${prevBook ? '' : 'disabled'}>
+                        ◀ ${prevBook ? prevBook.name : ''}
+                    </button>
+                    <div class="book-current">
+                        <span class="book-name">${books[currentIndex]?.name || this.currentBookId}</span>
+                        <button class="book-edit-btn" id="toggle-book-edit">⚙️</button>
+                    </div>
+                    <button class="book-arrow ${nextBook ? '' : 'disabled'}" 
+                            data-book="${nextBook ? nextBook.id : ''}"
+                            ${nextBook ? '' : 'disabled'}>
+                        ${nextBook ? nextBook.name : ''} ▶
+                    </button>
+                </div>
+                
+                ${this.bookEditing ? this.renderBookManager() : ''}
+                
+                <!-- 图片画廊 -->
+                <div class="image-gallery">
+                    <div class="gallery-header">
+                        <span class="gallery-title">📷 画像 (${version.images.length}枚)</span>
+                        <span style="font-size: 0.8rem; color: #666;">最大50枚</span>
+                    </div>
+                    <div class="gallery-grid" id="gallery-grid">
+                        ${version.images.map((img, i) => `
+                            <div class="gallery-item" data-image="${img.id}">
+                                <img src="${img.dataUrl}" alt="${i+1}">
+                                <span class="img-number">${i+1}</span>
+                                <button class="img-delete" data-delete="${img.id}">×</button>
+                            </div>
+                        `).join('')}
+                        <div class="gallery-upload" id="gallery-upload">
+                            <span class="upload-icon">📷</span>
+                            <span class="upload-text">画像追加</span>
+                        </div>
+                    </div>
+                    <input type="file" class="hidden-input" id="gallery-file-input" accept="image/*" multiple>
+                </div>
+                
+                <div class="character-info">
+                    <div class="visual-section">
+                        <div class="main-visual" id="main-visual">
+                            ${version.images[0] ? 
+                                `<img src="${version.images[0].dataUrl}" alt="${char.displayName}">` :
+                                `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">[画像なし]</div>`
+                            }
+                            <button class="visual-upload-btn" onclick="document.getElementById('main-visual-input').click()">設定</button>
+                        </div>
+                        <input type="file" class="hidden-input" id="main-visual-input" accept="image/*">
+                        <div class="character-quote">${version.notes || '「まだまだだね」'}</div>
+                    </div>
+                    <div class="profile-section">
+                        ${this.renderProfileForm(char, version)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 公式书管理器（编辑/删除/重命名）
+    renderBookManager() {
+        const char = db.getCharacter(this.currentCharacter);
+        const books = db.getAllBooks();
+        
+        return `
+            <div class="book-manager" style="padding: 1rem; background: #f0f0f0; border-bottom: 2px solid #000;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong>公式書バージョン管理</strong>
+                    <button class="btn-small" id="close-book-edit">閉じる</button>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    ${books.map(b => {
+                        const hasVersion = char.versions[b.id];
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border: 2px solid ${hasVersion ? '#000' : '#ccc'}; background: ${hasVersion ? '#fff' : '#f5f5f5'};">
+                                <input type="checkbox" class="book-toggle-version" data-book="${b.id}" ${hasVersion ? 'checked' : ''}>
+                                <span style="font-size: 0.85rem;">${b.name}</span>
+                                <button class="book-rename-btn" data-book-id="${b.id}" style="font-size: 0.7rem; padding: 0.1rem 0.3rem;">✏️</button>
+                            </div>
+                        `;
+                    }).join('')}
+                    <button class="btn-small" id="add-new-book-inline">＋ 新規</button>
+                </div>
+            </div>
+        `;
+    }
+
+    renderProfileForm(char, version) {
+        const fields = version.fixedFields;
+        const isEditing = this.editingData === this.currentBookId;
+        
+        let fieldsHtml = '';
+        for (const [key, field] of Object.entries(fields)) {
+            const fullWidth = field.type === 'textarea' ? 'full-width' : '';
+            fieldsHtml += `
+                <div class="field-item ${fullWidth}">
+                    <span class="field-label">${field.label}</span>
+                    <div class="field-value ${isEditing ? 'editing' : ''}">
+                        ${isEditing ? this.renderEditField(key, field) : (field.value || '—')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        let customHtml = '';
+        for (let i = 0; i < version.customFields.length; i++) {
+            const cf = version.customFields[i];
+            customHtml += `
+                <div class="custom-field-row">
+                    ${isEditing ? `
+                        <input type="text" name="custom-label-${i}" value="${cf.label}" placeholder="項目名">
+                        <input type="text" name="custom-value-${i}" value="${cf.value}" placeholder="内容">
+                        <button type="button" class="btn-icon remove-custom" data-index="${i}">×</button>
+                    ` : `
+                        <span style="min-width: 100px; font-weight: bold;">${cf.label}:</span>
+                        <span>${cf.value}</span>
+                    `}
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="profile-header">
+                <div>
+                    <div class="profile-name">
+                        ${char.displayName}
+                        <span class="kana">${fields.nameKana.value || ''}</span>
+                    </div>
+                </div>
+                <span class="profile-school-tag" style="background: ${db.getSchool(char.schoolId)?.color || '#666'}; color: #fff;">
+                    ${db.getSchool(char.schoolId)?.name || '不明'}
+                </span>
+            </div>
+            
+            <form id="profile-form" data-book="${this.currentBookId}">
+                <div class="fixed-fields">${fieldsHtml}</div>
+                
+                <div class="custom-section">
+                    <div class="section-header">
+                        <span class="section-title">追加情報</span>
+                        ${isEditing ? `<button type="button" class="btn-small" id="add-custom-field">＋ 追加</button>` : ''}
+                    </div>
+                    <div class="custom-fields-list" id="custom-fields">
+                        ${customHtml}
+                        ${version.customFields.length === 0 && !isEditing ? '<span style="color: #999; font-size: 0.85rem;">追加情報はありません</span>' : ''}
+                    </div>
+                </div>
+                
+                <div class="edit-actions">
+                    ${isEditing ? `
+                        <button type="button" class="btn-small" id="save-profile">💾 保存</button>
+                        <button type="button" class="btn-small" id="cancel-edit" style="background: #fff; color: #000;">✕ キャンセル</button>
+                    ` : `
+                        <button type="button" class="btn-small" id="edit-profile">✏️ 編集</button>
+                    `}
+                </div>
+            </form>
+        `;
+    }
+
+    renderEditField(key, field) {
+        const value = field.value || '';
+        if (field.type === 'select') {
+            let options = '';
+            for (const o of field.options) {
+                options += `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`;
+            }
+            return `<select name="${key}">${options}</select>`;
+        } else if (field.type === 'textarea') {
+            return `<textarea name="${key}" rows="3">${value}</textarea>`;
+        } else {
+            return `<input type="text" name="${key}" value="${value}" placeholder="${field.label}">`;
+        }
+    }
