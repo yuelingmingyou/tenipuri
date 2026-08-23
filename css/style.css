@@ -1141,3 +1141,164 @@ body {
 }
 
     
+/* ==================== 手机适配 + 箭头切换样式 ==================== */
+
+/* 公式书箭头导航 */
+.book-navigator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    background: var(--bg-dark);
+    gap: 0.5rem;
+}
+
+.book-arrow {
+    padding: 0.5rem 1rem;
+    background: #444;
+    color: #fff;
+    border: 2px solid #666;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 80px;
+}
+
+.book-arrow:hover:not(.disabled) {
+    background: #fff;
+    color: var(--bg-dark);
+    border-color: #fff;
+}
+
+.book-arrow.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.book-current {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    flex: 1;
+    justify-content: center;
+}
+
+.book-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.book-edit-btn {
+    background: transparent;
+    border: 1px solid #666;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.book-edit-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+/* 公式书管理器 */
+.book-manager {
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from { max-height: 0; opacity: 0; }
+    to { max-height: 200px; opacity: 1; }
+}
+
+.book-toggle-version {
+    cursor: pointer;
+}
+
+.book-rename-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.book-rename-btn:hover {
+    opacity: 1;
+}
+
+/* 手机侧边栏适配 */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 200px;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-area {
+        margin-left: 0;
+    }
+    
+    /* 手机显示汉堡菜单按钮 */
+    .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 200;
+        width: 40px;
+        height: 40px;
+        background: var(--bg-dark);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+    
+    .book-navigator {
+        padding: 0.5rem;
+    }
+    
+    .book-arrow {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+        min-width: 60px;
+    }
+    
+    .book-name {
+        font-size: 0.9rem;
+    }
+    
+    .character-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .visual-section {
+        border-right: none;
+        border-bottom: 2px solid #ddd;
+    }
+}
+
+/* 电脑端隐藏汉堡菜单 */
+@media (min-width: 901px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+}
+
+/* 打印 */
+@media print {
+    .sidebar, .data-toolbar, .top-nav, .book-navigator {
+        display: none !important;
+    }
+    
+    .main-area {
+        margin-left: 0;
+    }
+}
