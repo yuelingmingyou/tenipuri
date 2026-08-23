@@ -1,8 +1,7 @@
-// ==================== 网球王子公式书数据管理 - 完全版 ====================
+// ==================== 网球王子公式书数据管理 - 修复版 ====================
 
 const DB_NAME = 'tenipuri_fanbook_v2';
 
-// 固定字段模板
 const FIXED_FIELDS_TEMPLATE = {
     name: { label: '名前', value: '', type: 'text' },
     nameKana: { label: 'ふりがな', value: '', type: 'text' },
@@ -23,15 +22,6 @@ const FIXED_FIELDS_TEMPLATE = {
     fatherOccupation: { label: '父の職業', value: '', type: 'text' }
 };
 
-// 图片数据模板
-const IMAGE_TEMPLATE = {
-    id: '',
-    dataUrl: '',  // base64
-    caption: '',
-    uploadDate: '',
-    order: 0
-};
-
 class TenipuriDatabase {
     constructor() {
         this.characters = new Map();
@@ -41,19 +31,19 @@ class TenipuriDatabase {
     }
 
     initDefaultData() {
-        // 公式书版本 - 扩展
+        // 公式书版本
         const defaultBooks = [
             { id: '10.5', name: '10.5', year: 2002, title: 'テニスの王子様 10.5', series: 'original' },
             { id: '20.5', name: '20.5', year: 2003, title: 'テニスの王子様 20.5', series: 'original' },
             { id: '30.5', name: '30.5', year: 2004, title: 'テニスの王子様 30.5', series: 'original' },
             { id: '40.5', name: '40.5', year: 2005, title: 'テニスの王子様 40.5', series: 'original' },
             { id: 'npo10.5', name: '新10.5', year: 2009, title: '新テニスの王子様 10.5', series: 'new' },
-            { id: 'npo20.5', name: '新20.5', year: 2012, title: '新テニスの王子様 20.5', series: 'new' },
+            { id: 'npo20.5', name: '新20.5', year: 2012, title: '新テニスの王子様 20.5', series: 'new' }
         ];
         
         defaultBooks.forEach(b => this.books.set(b.id, b));
 
-        // 学校数据 - 扩展
+        // 学校数据
         const schoolsData = [
             {
                 id: 'seigaku', name: '青春学園', nameEn: 'SEISHO GAKUEN',
@@ -74,7 +64,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', 'サッカー部', 'バスケ部', '野球部', '陸上部'],
                 notableAlumni: ['手塚国光', '大石秀一郎', '不二周助', '菊丸英二'],
-                description: '都内有数の進学校でありながら、テニス部は全国レベルの強豪校。手塚国光を中心に個性豊かな選手が揃う。',
+                description: '都内有数の進学校でありながら、テニス部は全国レベルの強豪校。',
                 images: []
             },
             {
@@ -96,7 +86,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', '乗馬部', 'ヨット部', 'ゴルフ部', 'スキー部'],
                 notableAlumni: ['跡部景吾', '忍足侑士', '向日岳人', '宍戸亮', '芥川慈郎', '滝萩之介', '樺地崇弘'],
-                description: '超名門校。テニス部員は200名を超え、厳しい選抜制度を持つ。跡部景吾のもと「勝利」のためなら手段を選ばない。',
+                description: '超名門校。テニス部員は200名を超え、厳しい選抜制度を持つ。',
                 images: []
             },
             {
@@ -118,7 +108,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', '剣道部', '柔道部', '陸上競技部', '水泳部'],
                 notableAlumni: ['幸村精市', '真田弦一郎', '柳蓮二', '柳生比呂士', '仁王雅治', '丸井ブン太', 'ジャッカル桑原'],
-                description: '関東大会連覇、全国大会二連覇の最強校。幸村精市を中心に「常勝」を掲げ、鉄の掟で部を統率する。',
+                description: '関東大会連覇、全国大会二連覇の最強校。',
                 images: []
             },
             {
@@ -140,7 +130,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', '相撲部', '落語研究会', '漫才部', '大道芸部'],
                 notableAlumni: ['白石蔵ノ介', '千歳千里', '石田銀', '忍足謙也', '遠山金太郎', '一氏ユウジ', '金色小春'],
-                description: '大阪の名門。テニス部のモットーは「楽しめ！」。白石蔵ノ介の「聖書（バイブル）」で全国大会準優勝。',
+                description: '大阪の名門。テニス部のモットーは「楽しめ！」。',
                 images: []
             },
             {
@@ -162,7 +152,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', 'サッカー部', 'バレー部', 'バスケ部'],
                 notableAlumni: ['橘桔平', '神尾アキラ', '伊武深司', '石田鉄', '桜井雅也', '内村京介', '森辰徳'],
-                description: '元不良校だったが、橘桔平の入学以降テニス部が急成長。厳しい練習で全国レベルに到達した。',
+                description: '元不良校だったが、橘桔平の入学以降テニス部が急成長。',
                 images: []
             },
             {
@@ -184,7 +174,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', '野球部', 'サッカー部', 'バスケ部', '陸上部'],
                 notableAlumni: ['千石清純', '亜久津仁', '室町十次', '南健太郎', '東方雅美', '新渡米稲吉', '喜多一馬'],
-                description: 'スポーツ万能校。テニス部は「天才」千石清純を中心に個性派揃い。亜久津仁の潜在能力も注目された。',
+                description: 'スポーツ万能校。テニス部は「天才」千石清純を中心に個性派揃い。',
                 images: []
             },
             {
@@ -206,7 +196,7 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', 'サーフィン部', '釣り部', 'ヨット部', '水泳部'],
                 notableAlumni: ['佐伯虎次郎', '黒羽春風', '天根ヒカル', '木更津亮', '樹希彦', '首藤聡'],
-                description: '海沿いの学校。テニスの壁で独自の練習法を持つ。佐伯虎次郎と黒羽春風の「ペアプレー」が強み。',
+                description: '海沿いの学校。テニスの壁で独自の練習法を持つ。',
                 images: []
             },
             {
@@ -228,16 +218,50 @@ class TenipuriDatabase {
                 ],
                 clubActivities: ['テニス部', 'コンピューター部', '将棋部', '囲碁部', '数学研究部'],
                 notableAlumni: ['観月はじめ', '不二裕太', '柳沢慎也', '木更津淳'],
-                description: 'データテニスを重視する進学校。観月はじめの分析力と戦略で勝利を狙う。不二裕太は不二周助の弟。',
+                description: 'データテニスを重視する進学校。',
                 images: []
             }
         ];
         
         schoolsData.forEach(s => this.schools.set(s.id, s));
 
-        // 创建所有角色
+        // 创建角色
         this.createAllCharacters();
         this.saveToLocalStorage();
+    }
+
+    createVersionData(fieldValues) {
+        const data = JSON.parse(JSON.stringify(FIXED_FIELDS_TEMPLATE));
+        for (const [key, value] of Object.entries(fieldValues)) {
+            if (data[key]) {
+                data[key].value = value;
+            }
+        }
+        return {
+            fixedFields: data,
+            customFields: [],
+            notes: '',
+            images: []
+        };
+    }
+
+    addCharacter(id, name, schoolId, versionsData) {
+        const versions = {};
+        for (const [bookId, fields] of Object.entries(versionsData)) {
+            versions[bookId] = this.createVersionData(fields);
+        }
+        
+        const firstVersion = Object.values(versionsData)[0] || {};
+        
+        this.characters.set(id, {
+            id: id,
+            displayName: name,
+            nameKana: firstVersion.nameKana || '',
+            schoolId: schoolId,
+            versions: versions,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+        });
     }
 
     createAllCharacters() {
@@ -347,6 +371,7 @@ class TenipuriDatabase {
                 fatherOccupation: '財閥総帥' }
         });
 
+        // 立海大
         this.addCharacter('sanada', '真田弦一郎', 'rikkai', {
             '10.5': { birthday: '5月21日', height: '180', weight: '68', bloodType: 'A',
                 playStyle: 'オールラウンダー', dominantHand: '右',
@@ -433,38 +458,6 @@ class TenipuriDatabase {
         });
     }
 
-    addCharacter(id, name, schoolId, versionsData) {
-        const versions = {};
-        for (const [bookId, fields] of Object.entries(versionsData)) {
-            versions[bookId] = this.createVersionData(fields);
-        }
-        
-        this.characters.set(id, {
-            id,
-            displayName: name,
-            nameKana: fields?.nameKana || '',
-            schoolId,
-            versions,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-        });
-    }
-
-    createVersionData(fieldValues) {
-        const data = JSON.parse(JSON.stringify(FIXED_FIELDS_TEMPLATE));
-        for (const [key, value] of Object.entries(fieldValues)) {
-            if (data[key]) {
-                data[key].value = value;
-            }
-        }
-        return {
-            fixedFields: data,
-            customFields: [],
-            notes: '',
-            images: []  // 多图片支持
-        };
-    }
-
     // 图片管理
     addImage(charId, bookId, imageData) {
         const char = this.characters.get(charId);
@@ -494,14 +487,12 @@ class TenipuriDatabase {
         if (!version) return false;
         
         version.images = version.images.filter(img => img.id !== imageId);
-        // 重新排序
         version.images.forEach((img, i) => img.order = i);
         
         this.saveToLocalStorage();
         return true;
     }
 
-    // 学校图片
     addSchoolImage(schoolId, imageData) {
         const school = this.schools.get(schoolId);
         if (!school) return null;
@@ -530,20 +521,18 @@ class TenipuriDatabase {
         return true;
     }
 
-    // 添加公式书版本
     addBook(bookData) {
         const id = bookData.id || 'book_' + Date.now();
-        this.books.set(id, { ...bookData, id });
+        this.books.set(id, Object.assign({}, bookData, { id: id }));
         this.saveToLocalStorage();
         return id;
     }
 
-    // 获取角色按学校分组
     getCharactersBySchool() {
         const result = new Map();
         for (const [id, school] of this.schools) {
             result.set(id, {
-                school,
+                school: school,
                 characters: []
             });
         }
@@ -553,7 +542,6 @@ class TenipuriDatabase {
             if (group) {
                 group.characters.push(char);
             } else {
-                // 未分类
                 if (!result.has('other')) {
                     result.set('other', {
                         school: { id: 'other', name: 'その他', color: '#666' },
@@ -567,7 +555,6 @@ class TenipuriDatabase {
         return result;
     }
 
-    // 标准CRUD
     getCharacter(id) { return this.characters.get(id); }
     getSchool(id) { return this.schools.get(id); }
     getAllSchools() { return Array.from(this.schools.values()); }
@@ -583,7 +570,6 @@ class TenipuriDatabase {
         return true;
     }
 
-    // 导入导出
     exportData() {
         return {
             version: '2.0',
@@ -623,16 +609,15 @@ class TenipuriDatabase {
         } catch (e) {
             console.error('读取失败:', e);
         }
-        return false;return false;
+        return false;
     }
 }
 
-// 全局实例
-const db = new TenipuriDatabase(); db = new TenipuriDatabase();
-if (db.characters.size === 0) { (db.characters.size === 0) {
-    db.initDefaultData();db.initDefaultData();
+const db = new TenipuriDatabase();
+if (db.characters.size === 0) {
+    db.initDefaultData();
 }
 
-window.tenipuriDB = db;.tenipuriDB = db;
-window.FIXED_FIELDS_TEMPLATE = FIXED_FIELDS_TEMPLATE;.FIXED_FIELDS_TEMPLATE = FIXED_FIELDS_TEMPLATE;
+window.tenipuriDB = db;
+window.FIXED_FIELDS_TEMPLATE = FIXED_FIELDS_TEMPLATE;
 
