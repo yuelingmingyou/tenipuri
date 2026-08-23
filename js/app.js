@@ -1213,3 +1213,4 @@ class TenipuriApp {
             return `<input type="text" name="${key}" value="${value}" placeholder="${field.label}">`;
         }
     }
+
