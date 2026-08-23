@@ -1082,3 +1082,91 @@ if (db.characters.size === 0) {
 window.tenipuriDB = db;
 window.FIXED_FIELDS_TEMPLATE = FIXED_FIELDS_TEMPLATE;
 
+// 在 TenipuriDatabase 类中添加压缩方法
+
+compressImage(dataUrl, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height = Math.round(height * maxWidth / width);
+                width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+    });
+}
+
+// 修改 addImage 方法，添加压缩
+async addImage(charId, bookId, imageData) {
+    const char = this.characters.get(charId);
+    if (!char) return null;
+    
+    const version = char.versions[bookId];
+    if (!version) return null;
+    
+    // 压缩图片
+    const compressed = await this.compressImage(imageData);
+    
+    const image = {
+        id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        dataUrl: compressed,
+        caption: '',
+        uploadDate: new Date().toISOString(),
+        order: version.images.length
+    };
+    
+    version.images.push(image);
+    this.saveToLocalStorage();
+    return image;
+}
+
+// 同样修改 addSchoolImage
+async addSchoolImage(schoolId, imageData) {
+    const school = this.schools.get(schoolId);
+    if (!school) return null;
+    
+    const compressed = await this.compressImage(imageData);
+    
+    const image = {
+        id: 'sch_img_' + Date.now(),
+        dataUrl: compressed,
+        caption: '',
+        uploadDate: new Date().toISOString(),
+        pageNumber: school.images.length + 1
+    };
+    
+    school.images.push(image);
+    this.saveToLocalStorage();
+    return image;
+}
+
+// 修改 addSchoolMap
+async addSchoolMap(schoolId, imageData, label) {
+    const school = this.schools.get(schoolId);
+    if (!school) return null;
+    
+    const compressed = await this.compressImage(imageData, 1200, 0.8);
+    
+    const map = {
+        id: 'map_' + Date.now(),
+        dataUrl: compressed,
+        label: label || '学校周辺マップ',
+        uploadDate: new Date().toISOString()
+    };
+    
+    school.maps.push(map);
+    this.saveToLocalStorage();
+    return map;
+}
