@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テニプリDB</title>
+<script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Noto Sans JP","Hiragino Sans GB",sans-serif;background:#f5f5f0;padding:10px;padding-bottom:70px}
+.box{background:#fff;border:3px solid #000;padding:10px;margin-bottom:10px;box-shadow:4px 4px 0 rgba(0,0,0,0.2)}
+h2{background:#000;color:#fff;padding:5px 10px;display:inline-block;font-size:14px;margin-bottom:10px}
+h3{font-size:12px;font-weight:bold;border-left:3px solid #000;padding-left:5px;margin:10px 0 5px}
+h4{font-size:11px;font-weight:bold;color:#666;margin:8px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px}
+input,textarea,select{width:100%;border:2px solid #000;padding:5px;margin:2px 0;font-size:13px;font-family:inherit}
+input:focus,textarea:focus,select:focus{outline:none;background:#fffef5;box-shadow:3px 3px 0 #000}
+button{background:#fff;border:2px solid #000;padding:5px 10px;font-weight:bold;cursor:pointer;box-shadow:2px 2px 0 #000;font-size:12px}
+button:active{transform:translate(2px,2px);box-shadow:none}
+.mbtn-b{background:#000;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+@media(min-width:768px){.grid{grid-template-columns:repeat(4,1fr)}}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:3px solid #000;display:flex;justify-content:space-around;padding:5px;z-index:100}
+.nav button{background:none;border:none;box-shadow:none;font-size:12px;text-align:center}
+.nav button.on{font-weight:bold;color:#e74c3c}
+.nav button .ic{font-size:1.3rem;display:block}
+.profile-row{display:flex;align-items:flex-start;gap:5px;margin:4px 0;font-size:13px;flex-wrap:wrap}
+.profile-row .label{font-weight:bold;min-width:90px;flex-shrink:0;padding-top:5px}
+.profile-row input,.profile-row select{flex:1;min-width:120px}
+.version-tag{font-size:10px;color:#666;background:#f0f0f0;padding:1px 4px;border:1px solid #999}
+.qa-box{margin:8px 0;padding:10px;border:2px solid #000;background:#fff}
+.qa-q{color:#e74c3c;font-weight:bold;font-size:16px;margin-bottom:3px}
+.qa-a{color:#3498db;margin-top:5px}
+.comment-box{margin:5px 0;padding:8px;background:#f8f8f8;border:2px solid #ddd;position:relative}
+.comment-box .author{font-weight:bold;font-size:12px;color:#333;margin-bottom:3px}
+.comment-box .source{font-size:10px;color:#999;text-align:right}
+.schedule-row{display:flex;gap:5px;margin:3px 0;align-items:center}
+.schedule-row input.time{width:70px;text-align:center}
+.schedule-row input.event{flex:1}
+.section-divider{height:2px;background:repeating-linear-gradient(90deg,#000,#000 5px,transparent 5px,transparent 10px);margin:15px 0}
+.multi-version-item{display:flex;gap:5px;margin:3px 0;align-items:center}
+[v-cloak]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+<!-- 顶部导航 -->
+<div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap">
+  <button @click="nav='schools'" :class="nav==='schools'?'mbtn-b':''">🏫学校</button>
+  <button @click="nav='chars'" :class="nav==='chars'?'mbtn-b':''">🎾選手</button>
+  <button @click="save" style="margin-left:auto">💾保存</button>
+</div>
+
+<!-- 学校页面 -->
+<div v-if="nav==='schools'">
+  <div class="box">
+    <h2>学校リスト（{{schools.length}}校）</h2>
+    <div v-for="s in schools" :key="s.id" @click="selSchool=s" style="padding:8px;border:2px solid #000;margin:3px 0;cursor:pointer" :style="selSchool?.id===s.id?'background:#000;color:#fff':''">
+      <div style="display:flex;justify-content:space-between">
+        <span>{{s.name}}</span>
+        <span style="font-size:10px;opacity:0.7">{{getChars(s.id).length}}人</span>
+      </div>
+      <div v-if="s.captain" style="font-size:10px;opacity:0.6;margin-top:2px">部長: {{s.captain}}</div>
+    </div>
+  </div>
+  
+  <div v-if="selSchool" class="box">
+    <h2>{{selSchool.name}}</h2>
+    <input v-model="selSchool.captain" placeholder="部長">
+    <input v-model="selSchool.motto" placeholder="校訓">
+    <input v-model="selSchool.schoolColor" placeholder="代表色">
+    <textarea v-model="selSchool.description" rows="3" placeholder="概要"></textarea>
+    <button @click="addChar(selSchool.id)">+選手追加</button>
+    <div class="grid" style="margin-top:10px">
+      <div v-for="c in getChars(selSchool.id)" :key="c.id" @click="selChar=c;nav='chars'" class="box" style="text-align:center;padding:5px;cursor:pointer">
+        <div style="width:50px;height:50px;background:#ddd;margin:0 auto;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px">{{c.name[0]}}</div>
+        <div style="font-size:12px;font-weight:bold;margin-top:3px">{{c.name}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 选手列表页面 -->
+<div v-if="nav==='chars' && !selChar">
+  <div v-for="s in schools" :key="s.id" class="box">
+    <h2>{{s.name}}</h2>
+    <div v-for="c in getChars(s.id)" :key="c.id" @click="selChar=c" style="padding:5px;border:2px solid #000;margin:2px 0;cursor:pointer;display:flex;align-items:center;gap:8px">
+      <div style="width:40px;height:40px;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:bold">{{c.name[0]}}</div>
+      <span>{{c.name}}</span>
+    </div>
+  </div>
+</div>
+<!-- 选手详细编辑页面 -->
+<div v-if="nav==='chars' && selChar" style="padding-bottom:60px">
+  <button @click="selChar=null" style="margin-bottom:10px">← 戻る</button>
+  
+  <!-- 基础信息 -->
+  <div class="box">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+      <div style="width:80px;height:80px;background:#ddd;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:24px;border:3px solid #000">
+        {{selChar.name[0]}}
+      </div>
+      <div>
+        <h2 style="margin:0">{{selChar.name}}</h2>
+        <div style="font-size:12px;color:#666">{{getSchoolName(selChar.schoolId)}}</div>
+      </div>
+    </div>
+    
+    <!-- 固定基础项目 -->
+    <div v-for="(label, key) in baseProfileLabels" :key="key" class="profile-row">
+      <span class="label">{{label}}：</span>
+      
+      <!-- 多版本字段（数组） -->
+      <div v-if="multiVersionFields.includes(key)" style="flex:1">
+        <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="multi-version-item">
+          <input v-model="item.content" placeholder="内容" style="flex:1">
+          <input v-model="item.version" placeholder="10.5" style="width:80px">
+          <button @click="selChar.baseProfile[key].splice(idx,1)" style="padding:2px 6px">×</button>
+        </div>
+        <button @click="selChar.baseProfile[key].push({content:'',version:''})" style="font-size:11px;margin-top:2px">+版本追加</button>
+      </div>
+      
+      <!-- 单版本字段（字符串） -->
+      <input v-else v-model="selChar.baseProfile[key]" :placeholder="label" style="flex:1">
+    </div>
+  </div>
+
+  <!-- 一日行程 -->
+  <div class="box">
+    <h2>一日のスケジュール</h2>
+    
+    <h4>【登校日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="7:00">
+      <input v-model="item.event" class="event" placeholder="起床・朝練">
+      <button @click="selChar.dayRoutine.school.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.school.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+    
+    <h4>【休日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="9:00">
+      <input v-model="item.event" class="event" placeholder="自主練">
+      <button @click="selChar.dayRoutine.holiday.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+  </div>
+
+  <!-- 性格分析 -->
+  <div class="box">
+    <h2>性格分析</h2>
+    <textarea v-model="selChar.sections.personality" rows="4" placeholder="性格特点、行为模式、心理分析..."></textarea>
+  </div>
+
+  <!-- 他人评价 -->
+  <div class="box">
+    <h2>他人評価</h2>
+    <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-box">
+      <button @click="selChar.sections.othersComments.splice(i,1)" style="position:absolute;top:2px;right:2px;padding:2px 6px;font-size:10px">×</button>
+      <input v-model="c.author" placeholder="評価者" style="font-weight:bold;width:150px">
+      <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
+      <input v-model="c.source" placeholder="出处（如：POT公式書20.5）" style="font-size:11px;color:#666">
+    </div>
+    <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" style="margin-top:5px">+評価追加</button>
+  </div>
+
+  <!-- 奇闻趣事 -->
+  <div class="box">
+    <h2>エピソード・逸話</h2>
+    <textarea v-model="selChar.sections.anecdotes" rows="4" placeholder="有趣的小故事、经典场景..."></textarea>
+  </div>
+
+  <!-- 自述 Q&A -->
+  <div class="box">
+    <h2>本人のコメント Q&A</h2>
+    <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-box">
+      <button @click="selChar.sections.selfIntro.splice(i,1)" style="float:right;padding:2px 6px;font-size:10px">×</button>
+      <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" style="width:calc(100% - 30px);border:none;border-bottom:2px solid #e74c3c;background:transparent"></div>
+      <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答" style="width:100%;margin-top:5px"></textarea></div>
+      <input v-model="qa.source" placeholder="出处" style="font-size:11px;color:#666;margin-top:5px">
+    </div>
+    <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" style="margin-top:5px">+Q&A追加</button>
+  </div>
+
+  <!-- 随身物品 -->
+  <div class="box">
+    <h2>持ち物チェック</h2>
+    <div v-for="(item, i) in selChar.itemsCheck" :key="i" style="display:flex;gap:5px;margin:3px 0;align-items:center">
+      <input v-model="item.name" placeholder="物品名" style="flex:1">
+      <input v-model="item.desc" placeholder="説明" style="flex:2">
+      <button @click="selChar.itemsCheck.splice(i,1)">×</button>
+    </div>
+    <button @click="selChar.itemsCheck.push({name:'',desc:''})" style="margin-top:5px">+物品追加</button>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="nav">
+  <b<!-- 选手详细编辑页面 -->
+<div v-if="nav==='chars' && selChar" style="padding-bottom:60px">
+  <button @click="selChar=null" style="margin-bottom:10px">← 戻る</button>
+  
+  <!-- 基础信息 -->
+  <div class="box">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+      <div style="width:80px;height:80px;background:#ddd;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:24px;border:3px solid #000">
+        {{selChar.name[0]}}
+      </div>
+      <div>
+        <h2 style="margin:0">{{selChar.name}}</h2>
+        <div style="font-size:12px;color:#666">{{getSchoolName(selChar.schoolId)}}</div>
+      </div>
+    </div>
+    
+    <!-- 固定基础项目 -->
+    <div v-for="(label, key) in baseProfileLabels" :key="key" class="profile-row">
+      <span class="label">{{label}}：</span>
+      
+      <!-- 多版本字段（数组） -->
+      <div v-if="multiVersionFields.includes(key)" style="flex:1">
+        <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="multi-version-item">
+          <input v-model="item.content" placeholder="内容" style="flex:1">
+          <input v-model="item.version" placeholder="10.5" style="width:80px">
+          <button @click="selChar.baseProfile[key].splice(idx,1)" style="padding:2px 6px">×</button>
+        </div>
+        <button @click="selChar.baseProfile[key].push({content:'',version:''})" style="font-size:11px;margin-top:2px">+版本追加</button>
+      </div>
+      
+      <!-- 单版本字段（字符串） -->
+      <input v-else v-model="selChar.baseProfile[key]" :placeholder="label" style="flex:1">
+    </div>
+  </div>
+
+  <!-- 一日行程 -->
+  <div class="box">
+    <h2>一日のスケジュール</h2>
+    
+    <h4>【登校日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="7:00">
+      <input v-model="item.event" class="event" placeholder="起床・朝練">
+      <button @click="selChar.dayRoutine.school.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.school.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+    
+    <h4>【休日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="9:00">
+      <input v-model="item.event" class="event" placeholder="自主練">
+      <button @click="selChar.dayRoutine.holiday.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+  </div>
+
+  <!-- 性格分析 -->
+  <div class="box">
+    <h2>性格分析</h2>
+    <textarea v-model="selChar.sections.personality" rows="4" placeholder="性格特点、行为模式、心理分析..."></textarea>
+  </div>
+
+  <!-- 他人评价 -->
+  <div class="box">
+    <h2>他人評価</h2>
+    <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-box">
+      <button @click="selChar.sections.othersComments.splice(i,1)" style="position:absolute;top:2px;right:2px;padding:2px 6px;font-size:10px">×</button>
+      <input v-model="c.author" placeholder="評価者" style="font-weight:bold;width:150px">
+      <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
+      <input v-model="c.source" placeholder="出处（如：POT公式書20.5）" style="font-size:11px;color:#666">
+    </div>
+    <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" style="margin-top:5px">+評価追加</button>
+  </div>
+
+  <!-- 奇闻趣事 -->
+  <div class="box">
+    <h2>エピソード・逸話</h2>
+    <textarea v-model="selChar.sections.anecdotes" rows="4" placeholder="有趣的小故事、经典场景..."></textarea>
+  </div>
+
+  <!-- 自述 Q&A -->
+  <div class="box">
+    <h2>本人のコメント Q&A</h2>
+    <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-box">
+      <button @click="selChar.sections.selfIntro.splice(i,1)" style="float:right;padding:2px 6px;font-size:10px">×</button>
+      <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" style="width:calc(100% - 30px);border:none;border-bottom:2px solid #e74c3c;background:transparent"></div>
+      <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答" style="width:100%;margin-top:5px"></textarea></div>
+      <input v-model="qa.source" placeholder="出处" style="font-size:11px;color:#666;margin-top:5px">
+    </div>
+    <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" style="margin-top:5px">+Q&A追加</button>
+  </div>
+
+  <!-- 随身物品 -->
+  <div class="box">
+    <h2>持ち物チェック</h2>
+    <div v-for="(item, i) in selChar.itemsCheck" :key="i" style="display:flex;gap:5px;margin:3px 0;align-items:center">
+      <input v-model="item.name" placeholder="物品名" style="flex:1">
+      <input v-model="item.desc" placeholder="説明" style="flex:2">
+      <button @click="selChar.itemsCheck.splice(i,1)">×</button>
+    </div>
+    <button @click="selChar.itemsCheck.push({name:'',desc:''})" style="margin-top:5px">+物品追加</button>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="nav">
+  <button @click="nav='schools'" :class="nav==='schools'?'on':''"><span class="ic">🏫</span>学校</button>
+  <button @click="nav='chars';selChar=null" :class="nav==='chars'?'on':''"><span class="ic">🎾</span>選手</button>
+  <button @click="selChar=null"><span class="ic">☰</span>リスト</button>
+</div>
+</div>
+<!-- 选手详细编辑页面 -->
+<div v-if="nav==='chars' && selChar" style="padding-bottom:60px">
+  <button @click="selChar=null" style="margin-bottom:10px">← 戻る</button>
+  
+  <!-- 基础信息 -->
+  <div class="box">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+      <div style="width:80px;height:80px;background:#ddd;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:24px;border:3px solid #000">
+        {{selChar.name[0]}}
+      </div>
+      <div>
+        <h2 style="margin:0">{{selChar.name}}</h2>
+        <div style="font-size:12px;color:#666">{{getSchoolName(selChar.schoolId)}}</div>
+      </div>
+    </div>
+    
+    <!-- 固定基础项目 -->
+    <div v-for="(label, key) in baseProfileLabels" :key="key" class="profile-row">
+      <span class="label">{{label}}：</span>
+      
+      <!-- 多版本字段（数组） -->
+      <div v-if="multiVersionFields.includes(key)" style="flex:1">
+        <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="multi-version-item">
+          <input v-model="item.content" placeholder="内容" style="flex:1">
+          <input v-model="item.version" placeholder="10.5" style="width:80px">
+          <button @click="selChar.baseProfile[key].splice(idx,1)" style="padding:2px 6px">×</button>
+        </div>
+        <button @click="selChar.baseProfile[key].push({content:'',version:''})" style="font-size:11px;margin-top:2px">+版本追加</button>
+      </div>
+      
+      <!-- 单版本字段（字符串） -->
+      <input v-else v-model="selChar.baseProfile[key]" :placeholder="label" style="flex:1">
+    </div>
+  </div>
+
+  <!-- 一日行程 -->
+  <div class="box">
+    <h2>一日のスケジュール</h2>
+    
+    <h4>【登校日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="7:00">
+      <input v-model="item.event" class="event" placeholder="起床・朝練">
+      <button @click="selChar.dayRoutine.school.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.school.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+    
+    <h4>【休日】</h4>
+    <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
+      <input v-model="item.time" class="time" placeholder="9:00">
+      <input v-model="item.event" class="event" placeholder="自主練">
+      <button @click="selChar.dayRoutine.holiday.splice(i,1)" style="padding:2px 6px">×</button>
+    </div>
+    <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" style="font-size:11px;margin-top:3px">+追加</button>
+  </div>
+
+  <!-- 性格分析 -->
+  <div class="box">
+    <h2>性格分析</h2>
+    <textarea v-model="selChar.sections.personality" rows="4" placeholder="性格特点、行为模式、心理分析..."></textarea>
+  </div>
+
+  <!-- 他人评价 -->
+  <div class="box">
+    <h2>他人評価</h2>
+    <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-box">
+      <button @click="selChar.sections.othersComments.splice(i,1)" style="position:absolute;top:2px;right:2px;padding:2px 6px;font-size:10px">×</button>
+      <input v-model="c.author" placeholder="評価者" style="font-weight:bold;width:150px">
+      <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
+      <input v-model="c.source" placeholder="出处（如：POT公式書20.5）" style="font-size:11px;color:#666">
+    </div>
+    <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" style="margin-top:5px">+評価追加</button>
+  </div>
+
+  <!-- 奇闻趣事 -->
+  <div class="box">
+    <h2>エピソード・逸話</h2>
+    <textarea v-model="selChar.sections.anecdotes" rows="4" placeholder="有趣的小故事、经典场景..."></textarea>
+  </div>
+
+  <!-- 自述 Q&A -->
+  <div class="box">
+    <h2>本人のコメント Q&A</h2>
+    <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-box">
+      <button @click="selChar.sections.selfIntro.splice(i,1)" style="float:right;padding:2px 6px;font-size:10px">×</button>
+      <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" style="width:calc(100% - 30px);border:none;border-bottom:2px solid #e74c3c;background:transparent"></div>
+      <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答" style="width:100%;margin-top:5px"></textarea></div>
+      <input v-model="qa.source" placeholder="出处" style="font-size:11px;color:#666;margin-top:5px">
+    </div>
+    <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" style="margin-top:5px">+Q&A追加</button>
+  </div>
+
+  <!-- 随身物品 -->
+  <div class="box">
+    <h2>持ち物チェック</h2>
+    <div v-for="(item, i) in selChar.itemsCheck" :key="i" style="display:flex;gap:5px;margin:3px 0;align-items:center">
+      <input v-model="item.name" placeholder="物品名" style="flex:1">
+      <input v-model="item.desc" placeholder="説明" style="flex:2">
+      <button @click="selChar.itemsCheck.splice(i,1)">×</button>
+    </div>
+    <button @click="selChar.itemsCheck.push({name:'',desc:''})" style="margin-top:5px">+物品追加</button>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="nav">
+  <button @click="nav='schools'" :class="nav==='schools'?'on':''"><span class="ic">🏫</span>学校</button>
+  <button @click="nav='chars';selChar=null" :class="nav==='chars'?'on':''"><span class="ic">🎾</span>選手</button>
+  <button @click="selChar=null"><span class="ic">☰</span>リスト</button>
+</div>
+</div>
+<script>
+if(typeof Vue==='undefined'){
+  document.body.innerHTML='<div style="color:#e74c3c;padding:20px;text-align:center">⚠️ Vue.js加载失败，请检查网络</div>';
+  throw new Error('Vue not loaded');
+}
+
+const {createApp,ref,watch}=Vue;
+
+// 单版本字段（普通字符串）
+const singleVersionFields = [
+  'nameKanji','nameKana','nameRoma','class','position','u17',
+  'birthday','birthTime','zodiac','bloodType','height','weight',
+  'footSize','eyesight','dominantHand',
+  'family','fatherJob',
+  'elementary','committee','badSubject','schoolPlace','allowance','dailyRoutine'
+];
+
+// 多版本字段（数组，可追加版本）
+const multiVersionFields = [
+  'specialMoves','playStyle','racket','shoes',
+  'hobby','motto','color','favoriteFood','favoriteBook','favoriteMusic',
+  'type','dateSpot','wantNow','weakPoint',
+  'goodSubject','otherSkills','tournamentRoutine','favoriteDay','wantTravel','gift'
+];
+
+// 所有字段标签
+const baseProfileLabels = {
+  nameKanji:'漢字表記',nameKana:'かな表記',nameRoma:'ローマ字',
+  class:'クラス',position:'部内役職',u17:'U-17代表',
+  birthday:'生年月日',birthTime:'出生時間',zodiac:'星座',
+  bloodType:'血液型',height:'身長',weight:'体重',
+  footSize:'足のサイズ',eyesight:'視力',dominantHand:'利き手',
+  specialMoves:'必殺技',playStyle:'プレースタイル',
+  racket:'ラケット',shoes:'シューズ',
+  family:'家族構成',fatherJob:'父の職業',
+  hobby:'趣味',motto:'座右の銘',color:'好きな色',
+  favoriteFood:'好物',favoriteBook:'好きな本',favoriteMusic:'好きな音楽',
+  type:'好みのタイプ',dateSpot:'デートしたい場所',
+  wantNow:'今欲しいもの',weakPoint:'苦手なもの',
+  elementary:'出身小学校',committee:'委員会',
+  goodSubject:'得意科目',badSubject:'苦手科目',
+  schoolPlace:'学校でよく行く場所',allowance:'お小遣いの使い道',
+  dailyRoutine:'毎日必ずすること',
+  otherSkills:'テニス以外の特技',tournamentRoutine:'大会中の日課',
+  favoriteDay:'好きな記念日',wantTravel:'行きたい旅行先',
+  gift:'大切な人へのプレゼント'
+};
+
+createApp({
+  setup(){
+    const nav=ref('schools');
+    
+    // 7所学校
+    const schools=ref(JSON.parse(localStorage.getItem('t_s')||'null')||[
+      {id:'seigaku',name:'青春学園',captain:'手塚国光',motto:'質実剛健',schoolColor:'青/白',description:'東京都の伝統校。チームワークと厳しい練習で全国を目指す。'},
+      {id:'hyotei',name:'氷帝学園',captain:'跡部景吾',motto:'勝てば官軍',schoolColor:'灰/紺',description:'名門私立。テニス部員数200名を超える巨大部。実力主義を掲げる。'},
+      {id:'rikkai',name:'立海大附属',captain:'幸村精市',motto:'常勝立海',schoolColor:'黄/黒',description:'王者立海大。関東15連覇の伝説を持つ最強校。'},
+      {id:'st-rudolph',name:'聖ルドルフ学院',captain:'観月はじめ',motto:'',schoolColor:'白/赤',description:'データテニスで戦う新興校。観月の分析力が武器。'},
+      {id:'rokaku',name:'六角中学校',captain:'佐伯虎次郎',motto:'',schoolColor:'橙/黒',description:'海辺の学校。独特的な練習方法と柔軟な発想が特徴。'},
+      {id:'yamabuki',name:'山吹中学校',captain:'南健太郎',motto:'',schoolColor:'黄/緑',description:'ダブルスに強い学校。個性的な選手が揃う。'},
+      {id:'shitenhoji',name:'四天宝寺',captain:'白石蔵ノ介',motto:'',schoolColor:'紺/白',description:'大阪の強豪。エンターテイメント精神あふれる楽しいチーム。'}
+    ]);
+    
+    const chars=ref(JSON.parse(localStorage.getItem('t_c')||'[]'));
+    const selSchool=ref(null);
+    const selChar=ref(null);
+    
+    // 创建完整基础资料结构
+    const createBaseProfile = () => {
+      const profile = {};
+      singleVersionFields.forEach(k => profile[k] = '');
+      multiVersionFields.forEach(k => profile[k] = [{content:'',version:''}]);
+      return profile;
+    };
+    
+    // 初始化默认角色（仁王雅治风格）
+    if(!chars.value.length){
+      chars.value.push({
+        id:'r1',schoolId:'rikkai',name:'仁王雅治',
+        baseProfile:{
+          nameKanji:'仁王雅治',nameKana:'におうまさはる',nameRoma:'Nioh Masaharu',
+          class:'3年B組14番',position:'',u17:'U-17日本代表隊 中学生',
+          birthday:'12月4日',birthTime:'16:29',zodiac:'射手座',
+          bloodType:'AB型',height:'176cm',weight:'60kg',
+          footSize:'27cm',eyesight:'右2.0 左2.0',dominantHand:'左手',
+          specialMoves:[{content:'欺詐打法、幻影、同調、能力共鳴、流星錘抽击',version:'氷立公式書'}],
+          playStyle:'全能型',
+          racket:[{content:'Prince MORE POWER 1150 S',version:''}],
+          shoes:[{content:'YONEX POWER CUSHION WIDE 271(SHT-271W)',version:''}],
+          family:'父、母、姐、弟',fatherJob:'公司职员（建筑公司）',
+          hobby:'飞镖、21点',motto:'骑着黑色的白马向前后退',
+          color:[{content:'蓝色',version:''}],
+          favoriteFood:[{content:'烤肉（牛尾汤）',version:'NPO公式書23.5'}],
+          favoriteBook:[{content:'《欺诈师乐园》→《为了变得直率》',version:'NPO公式書23.5'}],
+          favoriteMusic:'爵士',
+          type:[{content:'擅长策略的人→能让人看见素颜的人',version:'NPO公式書23.5'}],
+          dateSpot:[{content:'海→拉斯维加斯',version:'NPO公式書23.5'}],
+          wantNow:[{content:'螺丝和螺丝刀（用途不明）→夜光涂料和气球（用途不明）',version:'NPO公式書23.5'}],
+          weakPoint:[{content:'炎热、蔬菜',version:'NPO公式書23.5'}],
+          elementary:'不详（好像是南方的某个小学）',committee:'无',
+          goodSubject:[{content:'数学、夏之管语',version:'20周年公式書'}],badSubject:'音乐',
+          schoolPlace:'屋顶',allowance:'秘密',dailyRoutine:'课程的预习和复习？',
+          otherSkills:[{content:'射击、脱模、投掷硬币',version:'NPO公式書23.5'}],
+          tournamentRoutine:[{content:'往口袋里补充糖和巧克力',version:'NPO公式書23.5'}],
+          favoriteDay:[{content:'新月之夜',version:'20周年公式書'}],
+          wantTravel:[{content:'巴特罗之家',version:'20周年公式書'}],
+          gift:[{content:'充满惊喜与欢乐的闪耀时刻',version:'20周年公式書'}]
+        },
+        dayRoutine:{
+          school:[{time:'',event:''}],
+          holiday:[{time:'',event:''}]
+        },
+        sections:{
+          personality:'',
+          othersComments:[],
+          anecdotes:'',
+          selfIntro:[]
+        },
+        itemsCheck:[]
+      });
+    }
+    
+    // 确保所有角色结构完整
+    chars.value.forEach(c=>{
+      if(!c.baseProfile) c.baseProfile = createBaseProfile();
+      singleVersionFields.forEach(k=>{
+        if(!(k in c.baseProfile)) c.baseProfile[k] = '';
+      });
+      multiVersionFields.forEach(k=>{
+        if(!(k in c.baseProfile) || !Array.isArray(c.baseProfile[k])) {
+          c.baseProfile[k] = [{content:'',version:''}];
+        }
+      });
+      if(!c.dayRoutine) c.dayRoutine = {school:[],holiday:[]};
+      if(!c.dayRoutine.school) c.dayRoutine.school = [];
+      if(!c.dayRoutine.holiday) c.dayRoutine.holiday = [];
+      if(!c.sections) c.sections = {personality:'',othersComments:[],anecdotes:'',selfIntro:[]};
+      if(!c.itemsCheck) c.itemsCheck = [];
+    });
+    
+    const getChars=(sid)=>chars.value.filter(c=>c.schoolId===sid);
+    const getSchoolName=(sid)=>(schools.value.find(s=>s.id===sid)||{}).name||'';
+    
+    const addChar=(sid)=>{
+      const n=prompt('新しい選手の名前を入力してください：');
+      if(!n) return;
+      chars.value.push({
+        id:'c'+Date.now(),schoolId:sid,name:n,
+        baseProfile: createBaseProfile(),
+        dayRoutine:{school:[],holiday:[]},
+        sections:{personality:'',othersComments:[],anecdotes:'',selfIntro:[]},
+        itemsCheck:[]
+      });
+      save();
+    };
+    
+    const save=()=>{
+      localStorage.setItem('t_s',JSON.stringify(schools.value));
+      localStorage.setItem('t_c',JSON.stringify(chars.value));
+      alert('保存しました！');
+    };
+    
+    watch([schools,chars],()=>{
+      localStorage.setItem('t_s',JSON.stringify(schools.value));
+      localStorage.setItem('t_c',JSON.stringify(chars.value));
+    },{deep:true});
+    
+    return{
+      nav,schools,chars,selSchool,selChar,
+      baseProfileLabels,singleVersionFields,multiVersionFields,
+      getChars,getSchoolName,addChar,save
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
