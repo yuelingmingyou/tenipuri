@@ -4,76 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>网球王子 - 公式书资料数据库</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vue 3 CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js CDN (雷达图) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS (国内 CDN) -->
+    <script src="https://cdn.staticfile.net/tailwindcss/2.2.19/tailwindcss.min.js"></script>
+    <!-- Vue 3 (国内 CDN) -->
+    <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.js"></script>
+    <!-- Chart.js (国内 CDN) -->
+    <script src="https://cdn.staticfile.net/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        /* 黑白漫画风字体与细节 */
+        [v-cloak] { display: none !important; }
         body {
             background-color: #f4f4f0;
             color: #111;
-            font-family: "Courier New", Courier, "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-family: "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
-        .manga-border {
-            border: 3px solid #000;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .manga-border-sm {
-            border: 2px solid #000;
-            box-shadow: 2px 2px 0px #000;
-        }
-        .manga-title {
-            background-color: #000;
-            color: #fff;
-            padding: 2px 8px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        .halftone-pattern {
-            background-image: radial-gradient(#000 15%, transparent 16%);
-            background-size: 8px 8px;
-        }
+        .manga-border { border: 3px solid #000; box-shadow: 4px 4px 0px #000; }
+        .manga-border-sm { border: 2px solid #000; box-shadow: 2px 2px 0px #000; }
+        .manga-title { background-color: #000; color: #fff; padding: 2px 8px; font-weight: bold; display: inline-block; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-<div id="app" class="flex flex-col md:flex-row min-h-screen">
+<div id="app" v-cloak class="flex flex-col md:flex-row min-h-screen relative overflow-x-hidden">
 
     <!-- 移动端顶部导航栏 -->
-    <div class="md:hidden bg-black text-white p-4 flex justify-between items-center sticky top-0 z-50">
-        <h1 class="font-bold text-lg tracking-widest">TENIPURI ARCHIVE</h1>
-        <button @click="sidebarOpen = !sidebarOpen" class="border border-white px-3 py-1 font-bold">
+    <div class="md:hidden bg-black text-white p-4 flex justify-between items-center sticky top-0 z-30">
+        <h1 class="font-bold text-base tracking-widest">TENIPURI ARCHIVE</h1>
+        <button @click="sidebarOpen = !sidebarOpen" class="border border-white px-3 py-1 font-bold text-sm bg-gray-800 active:bg-gray-700">
             {{ sidebarOpen ? '关闭菜单' : '学校/角色列表' }}
         </button>
     </div>
 
-    <!-- 侧边栏（适配手机端抽屉） -->
+    <!-- 移动端遮罩层 -->
+    <div v-if="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"></div>
+
+    <!-- 响应式侧边栏 -->
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-           class="fixed md:relative z-40 w-64 bg-white border-r-4 border-black p-4 h-full overflow-y-auto transition-transform duration-300 ease-in-out inset-y-0 left-0">
-        <div class="manga-title text-xl mb-4 text-center w-full">学校与王子目录</div>
+           class="fixed md:sticky top-0 z-50 w-64 bg-white border-r-4 border-black p-4 h-screen overflow-y-auto transition-transform duration-300 ease-in-out left-0">
+        <div class="manga-title text-lg mb-4 text-center w-full">学校与王子目录</div>
         
-        <!-- 全局数据导出导入按钮 -->
+        <!-- 数据导出导入 -->
         <div class="mb-6 flex gap-2">
-            <button @click="exportData" class="flex-1 manga-border-sm text-xs py-1 bg-gray-200 hover:bg-black hover:text-white font-bold">导出JSON</button>
-            <label class="flex-1 manga-border-sm text-xs py-1 bg-gray-200 hover:bg-black hover:text-white font-bold text-center cursor-pointer">
+            <button @click="exportData" class="flex-1 manga-border-sm text-xs py-1 bg-gray-100 hover:bg-black hover:text-white font-bold">导出JSON</button>
+            <label class="flex-1 manga-border-sm text-xs py-1 bg-gray-100 hover:bg-black hover:text-white font-bold text-center cursor-pointer">
                 导入JSON
                 <input type="file" @change="importData" accept=".json" class="hidden">
             </label>
         </div>
 
-        <!-- 学校及角色树状列表 -->
+        <!-- 学校及角色目录 -->
         <div v-for="school in schools" :key="school.id" class="mb-4">
             <div class="flex justify-between items-center border-b-2 border-black pb-1 mb-2">
-                <span class="font-bold cursor-pointer hover:underline" @click="selectSchool(school)">{{ school.name }}</span>
-                <button @click="addCharacter(school.id)" class="text-xs bg-black text-white px-1 font-bold">+角色</button>
+                <span class="font-bold cursor-pointer hover:underline text-sm" @click="selectSchool(school)">{{ school.name }}</span>
+                <button @click="addCharacter(school.id)" class="text-xs bg-black text-white px-1.5 py-0.5 font-bold">+角色</button>
             </div>
-            <ul class="pl-3 space-y-1">
+            <ul class="pl-2 space-y-1">
                 <li v-for="char in getSchoolCharacters(school.id)" :key="char.id" 
                     @click="selectCharacter(char)"
                     :class="selectedChar && selectedChar.id === char.id ? 'bg-black text-white' : 'hover:bg-gray-200'"
-                    class="cursor-pointer p-1 text-sm rounded flex justify-between items-center">
+                    class="cursor-pointer p-1.5 text-xs rounded flex justify-between items-center">
                     <span>{{ char.name }}</span>
                     <span v-if="char.isCustom" class="text-xs border border-current px-1">OC</span>
                 </li>
@@ -85,97 +72,93 @@
     <main class="flex-1 p-4 md:p-8 overflow-y-auto">
         <!-- 1. 学校视图 -->
         <div v-if="currentView === 'school' && selectedSchool" class="space-y-6">
-            <div class="manga-border bg-white p-6">
-                <h1 class="text-3xl font-extrabold border-b-4 border-black pb-2 mb-4">{{ selectedSchool.name }} - 学校概要</h1>
+            <div class="manga-border bg-white p-4 md:p-6">
+                <h1 class="text-2xl md:text-3xl font-extrabold border-b-4 border-black pb-2 mb-4">{{ selectedSchool.name }} - 学校概要</h1>
                 
-                <!-- 学校公式书图片多图上传与展示 (支持起码10页以上) -->
+                <!-- 公式书图集 -->
                 <div class="mb-6">
                     <h2 class="manga-title mb-3">学校公式书页面 ({{ selectedSchool.images ? selectedSchool.images.length : 0 }})</h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                         <div v-for="(img, idx) in selectedSchool.images" :key="idx" class="manga-border-sm p-1 relative bg-gray-50">
-                            <img :src="img" class="w-full h-40 object-cover">
-                            <button @click="removeSchoolImage(idx)" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1">X</button>
+                            <img :src="img" class="w-full h-36 object-cover">
+                            <button @click="selectedSchool.images.splice(idx,1); saveData();" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1 font-bold">X</button>
                         </div>
                     </div>
-                    <input type="file" @change="uploadSchoolImage" accept="image/*" class="text-sm">
+                    <input type="file" @change="uploadSchoolImage" accept="image/*" class="text-xs">
                 </div>
 
-                <!-- 学校活动时间线 -->
+                <!-- 学校时间线 -->
                 <div class="mb-6">
                     <h2 class="manga-title mb-3">学校活动时间线</h2>
                     <div class="space-y-2 mb-3">
                         <div v-for="(event, idx) in selectedSchool.timeline" :key="idx" class="flex gap-2 items-center">
-                            <input v-model="event.month" placeholder="月份/时期" class="manga-border-sm p-1 w-24 text-sm">
-                            <input v-model="event.title" placeholder="活动名称" class="manga-border-sm p-1 flex-1 text-sm">
-                            <button @click="selectedSchool.timeline.splice(idx, 1)" class="text-red-600 font-bold px-2">删</button>
+                            <input v-model="event.month" placeholder="月份" class="manga-border-sm p-1 w-20 text-xs">
+                            <input v-model="event.title" placeholder="活动名称" class="manga-border-sm p-1 flex-1 text-xs">
+                            <button @click="selectedSchool.timeline.splice(idx, 1)" class="text-red-600 font-bold px-1 text-xs">删除</button>
                         </div>
                     </div>
-                    <button @click="selectedSchool.timeline.push({month:'', title:''})" class="manga-border-sm px-3 py-1 text-sm bg-black text-white">+ 追加活动</button>
+                    <button @click="selectedSchool.timeline.push({month:'', title:''})" class="manga-border-sm px-2 py-1 text-xs bg-black text-white">+ 追加活动</button>
                 </div>
 
-                <!-- 学校地图追加 -->
+                <!-- 学校地图 -->
                 <div>
                     <h2 class="manga-title mb-3">学校地图/平面图</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                         <div v-for="(mapImg, idx) in selectedSchool.maps" :key="idx" class="manga-border-sm p-1 relative">
-                            <img :src="mapImg" class="w-full h-48 object-contain">
-                            <button @click="selectedSchool.maps.splice(idx, 1)" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1">X</button>
+                            <img :src="mapImg" class="w-full h-44 object-contain">
+                            <button @click="selectedSchool.maps.splice(idx, 1)" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1 font-bold">X</button>
                         </div>
                     </div>
-                    <input type="file" @change="uploadSchoolMap" accept="image/*" class="text-sm">
+                    <input type="file" @change="uploadSchoolMap" accept="image/*" class="text-xs">
                 </div>
             </div>
         </div>
 
         <!-- 2. 角色视图 -->
         <div v-if="currentView === 'character' && selectedChar" class="space-y-6">
-            
-            <!-- 头部基本资料 -->
-            <div class="manga-border bg-white p-6">
+            <div class="manga-border bg-white p-4 md:p-6">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <span class="text-xs font-bold text-gray-500">{{ getSchoolName(selectedChar.schoolId) }}</span>
-                        <h1 class="text-4xl font-black">{{ selectedChar.name }}</h1>
+                        <h1 class="text-2xl md:text-4xl font-black">{{ selectedChar.name }}</h1>
                     </div>
                     <div class="flex gap-2">
-                        <button @click="saveData" class="manga-border-sm bg-black text-white px-4 py-1 font-bold">保存数据</button>
-                        <button v-if="selectedChar.isCustom" @click="deleteCharacter(selectedChar.id)" class="manga-border-sm bg-red-600 text-white px-2 py-1 font-bold">删除角色</button>
+                        <button @click="saveData" class="manga-border-sm bg-black text-white px-3 py-1 font-bold text-xs">保存数据</button>
+                        <button v-if="selectedChar.isCustom" @click="deleteCharacter(selectedChar.id)" class="manga-border-sm bg-red-600 text-white px-2 py-1 font-bold text-xs">删除角色</button>
                     </div>
                 </div>
 
-                <!-- 预先填好固定项目，可追加版本 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-t-2 border-black pt-4">
-                    <div v-for="(val, key) in selectedChar.baseProfile" :key="key" class="border-b border-gray-300 pb-1">
-                        <span class="font-bold inline-block w-28">{{ profileLabels[key] || key }}：</span>
+                <!-- 基础项目 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs border-t-2 border-black pt-4">
+                    <div v-for="(val, key) in selectedChar.baseProfile" :key="key" class="border-b border-gray-200 pb-1">
+                        <span class="font-bold inline-block w-24">{{ profileLabels[key] || key }}：</span>
                         <div class="inline-block flex-1">
-                            <!-- 如果是多版本数据组（如：喜欢的颜色：红（10.5），蓝（20.5）） -->
                             <div v-if="Array.isArray(val)" class="space-y-1">
                                 <div v-for="(item, idx) in val" :key="idx" class="flex gap-1 items-center">
-                                    <input v-model="item.content" class="manga-border-sm px-1 text-xs w-28">
-                                    <span class="text-xs">版本:</span>
-                                    <input v-model="item.version" class="manga-border-sm px-1 text-xs w-16" placeholder="如 10.5">
-                                    <button @click="val.splice(idx,1)" class="text-red-500 text-xs">x</button>
+                                    <input v-model="item.content" class="manga-border-sm px-1 text-xs w-24">
+                                    <span>版本:</span>
+                                    <input v-model="item.version" class="manga-border-sm px-1 text-xs w-12" placeholder="10.5">
+                                    <button @click="val.splice(idx,1)" class="text-red-500">x</button>
                                 </div>
-                                <button @click="val.push({content:'', version:''})" class="text-xs text-blue-600 underline">+追加版本记录</button>
+                                <button @click="val.push({content:'', version:''})" class="text-xs text-blue-600 underline">+追加版本</button>
                             </div>
-                            <input v-else v-model="selectedChar.baseProfile[key]" class="manga-border-sm px-1 text-xs w-48">
+                            <input v-else v-model="selectedChar.baseProfile[key]" class="manga-border-sm px-1 text-xs w-44">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 身体素质五维图与分析 -->
-            <div class="manga-border bg-white p-6">
+            <!-- 雷达图与点评 -->
+            <div class="manga-border bg-white p-4 md:p-6">
                 <h2 class="manga-title mb-4">身体素质五维图对比 & 评价</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <canvas id="radarChart" class="w-full max-h-80"></canvas>
+                        <canvas id="radarChart" class="w-full max-h-72"></canvas>
                         <div class="mt-4 space-y-2">
-                            <h3 class="font-bold text-sm">管理五维图数据集：</h3>
                             <div v-for="(ds, idx) in selectedChar.radarDatasets" :key="idx" class="manga-border-sm p-2 text-xs space-y-1">
                                 <div class="flex justify-between">
-                                    <input v-model="ds.label" placeholder="版本名称 (如 20.5)" class="font-bold border-b border-black">
-                                    <button @click="selectedChar.radarDatasets.splice(idx,1); updateChart()" class="text-red-600">删除此版本</button>
+                                    <input v-model="ds.label" placeholder="版本名称" class="font-bold border-b border-black">
+                                    <button @click="selectedChar.radarDatasets.splice(idx,1); updateChart()" class="text-red-600">删除</button>
                                 </div>
                                 <div class="grid grid-cols-5 gap-1 pt-1">
                                     <div v-for="(val, pIdx) in ds.data" :key="pIdx">
@@ -184,152 +167,136 @@
                                     </div>
                                 </div>
                             </div>
-                            <button @click="addRadarDataset" class="manga-border-sm text-xs px-2 py-1 bg-black text-white">+ 追加公式书版本五维</button>
+                            <button @click="addRadarDataset" class="manga-border-sm text-xs px-2 py-1 bg-black text-white">+ 追加版本五维</button>
                         </div>
                     </div>
-
-                    <!-- 每一项点评和综合评价 -->
-                    <div class="space-y-3">
-                        <h3 class="font-bold border-b border-black pb-1">五维能力点评与综合评价</h3>
+                    <div class="space-y-2">
                         <div v-for="param in radarParamNames" :key="param" class="text-xs">
                             <span class="font-bold">{{ param }}点评：</span>
-                            <textarea v-model="selectedChar.radarReviews[param]" rows="1" class="w-full manga-border-sm p-1 mt-1"></textarea>
+                            <textarea v-model="selectedChar.radarReviews[param]" rows="1" class="w-full manga-border-sm p-1 mt-0.5"></textarea>
                         </div>
                         <div class="text-xs">
                             <span class="font-bold">综合评价：</span>
-                            <textarea v-model="selectedChar.radarReviews['综合']" rows="3" class="w-full manga-border-sm p-1 mt-1"></textarea>
+                            <textarea v-model="selectedChar.radarReviews['综合']" rows="2" class="w-full manga-border-sm p-1 mt-0.5"></textarea>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 时间轴板块：日常一日时间轴 & 个人历史时间轴 -->
-            <div class="manga-border bg-white p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 龙马/王子的一天时间轴 -->
+            <!-- 时间轴 -->
+            <div class="manga-border bg-white p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h2 class="manga-title mb-3">王子的一天（学校 / 休息日）</h2>
                     <div class="mb-4">
-                        <h3 class="font-bold text-sm mb-1">【学校生活时间轴】</h3>
+                        <h3 class="font-bold text-xs mb-1">【学校生活】</h3>
                         <div v-for="(t, i) in selectedChar.dayRoutine.school" :key="i" class="flex gap-1 mb-1 text-xs">
-                            <input v-model="t.time" class="manga-border-sm w-20 p-1" placeholder="06:45">
+                            <input v-model="t.time" class="manga-border-sm w-16 p-1" placeholder="06:45">
                             <input v-model="t.event" class="manga-border-sm flex-1 p-1" placeholder="事件">
                             <button @click="selectedChar.dayRoutine.school.splice(i,1)" class="text-red-500">x</button>
                         </div>
-                        <button @click="selectedChar.dayRoutine.school.push({time:'', event:''})" class="text-xs underline">+ 追加学校行程</button>
+                        <button @click="selectedChar.dayRoutine.school.push({time:'', event:''})" class="text-xs underline">+ 追加行程</button>
                     </div>
                     <div>
-                        <h3 class="font-bold text-sm mb-1">【休息日生活时间轴】</h3>
+                        <h3 class="font-bold text-xs mb-1">【休息日】</h3>
                         <div v-for="(t, i) in selectedChar.dayRoutine.holiday" :key="i" class="flex gap-1 mb-1 text-xs">
-                            <input v-model="t.time" class="manga-border-sm w-20 p-1" placeholder="09:00">
+                            <input v-model="t.time" class="manga-border-sm w-16 p-1" placeholder="09:00">
                             <input v-model="t.event" class="manga-border-sm flex-1 p-1" placeholder="事件">
                             <button @click="selectedChar.dayRoutine.holiday.splice(i,1)" class="text-red-500">x</button>
                         </div>
-                        <button @click="selectedChar.dayRoutine.holiday.push({time:'', event:''})" class="text-xs underline">+ 追加休息日行程</button>
+                        <button @click="selectedChar.dayRoutine.holiday.push({time:'', event:''})" class="text-xs underline">+ 追加行程</button>
                     </div>
                 </div>
-
-                <!-- 王子个人历史履历时间轴 -->
                 <div>
-                    <h2 class="manga-title mb-3">个人历史履历时间轴</h2>
+                    <h2 class="manga-title mb-3">个人历史履历</h2>
                     <div v-for="(h, i) in selectedChar.historyTimeline" :key="i" class="flex gap-1 mb-1 text-xs">
-                        <input v-model="h.age" class="manga-border-sm w-16 p-1" placeholder="年龄/时期">
-                        <textarea v-model="h.event" class="manga-border-sm flex-1 p-1" rows="1" placeholder="事件履历"></textarea>
+                        <input v-model="h.age" class="manga-border-sm w-14 p-1" placeholder="时期">
+                        <textarea v-model="h.event" class="manga-border-sm flex-1 p-1" rows="1" placeholder="履历"></textarea>
                         <button @click="selectedChar.historyTimeline.splice(i,1)" class="text-red-500">x</button>
                     </div>
-                    <button @click="selectedChar.historyTimeline.push({age:'', event:''})" class="text-xs underline">+ 追加历史节点</button>
+                    <button @click="selectedChar.historyTimeline.push({age:'', event:''})" class="text-xs underline">+ 追加履历节点</button>
                 </div>
             </div>
 
-            <!-- 官方板块大集合（性格分析、他人评价、奇闻趣事、自述、访谈） -->
-            <div class="manga-border bg-white p-6 space-y-6">
-                <!-- 性格分析 -->
+            <!-- 官方板块 -->
+            <div class="manga-border bg-white p-4 md:p-6 space-y-4 text-xs">
                 <div>
                     <h2 class="manga-title mb-2">性格分析</h2>
-                    <textarea v-model="selectedChar.sections.personality" rows="3" class="w-full manga-border-sm p-2 text-sm"></textarea>
+                    <textarea v-model="selectedChar.sections.personality" rows="2" class="w-full manga-border-sm p-1"></textarea>
                 </div>
-
-                <!-- 他人评价 -->
                 <div>
                     <h2 class="manga-title mb-2">他人评价</h2>
-                    <div v-for="(comment, i) in selectedChar.sections.othersComments" :key="i" class="flex gap-2 mb-2">
-                        <input v-model="comment.author" placeholder="评价者" class="manga-border-sm p-1 text-xs w-28">
-                        <input v-model="comment.text" placeholder="评价内容" class="manga-border-sm p-1 text-xs flex-1">
-                        <button @click="selectedChar.sections.othersComments.splice(i,1)" class="text-red-500 text-xs">删除</button>
+                    <div v-for="(comment, i) in selectedChar.sections.othersComments" :key="i" class="flex gap-2 mb-1">
+                        <input v-model="comment.author" placeholder="评价者" class="manga-border-sm p-1 w-20">
+                        <input v-model="comment.text" placeholder="评价内容" class="manga-border-sm p-1 flex-1">
+                        <button @click="selectedChar.sections.othersComments.splice(i,1)" class="text-red-500">x</button>
                     </div>
-                    <button @click="selectedChar.sections.othersComments.push({author:'', text:''})" class="text-xs underline">+ 追加他人评价</button>
+                    <button @click="selectedChar.sections.othersComments.push({author:'', text:''})" class="underline">+ 追加评价</button>
                 </div>
-
-                <!-- 奇闻趣事 -->
                 <div>
                     <h2 class="manga-title mb-2">奇闻趣事</h2>
-                    <textarea v-model="selectedChar.sections.anecdotes" rows="3" class="w-full manga-border-sm p-2 text-sm"></textarea>
+                    <textarea v-model="selectedChar.sections.anecdotes" rows="2" class="w-full manga-border-sm p-1"></textarea>
                 </div>
-
-                <!-- 王子自述 -->
                 <div>
                     <h2 class="manga-title mb-2">王子自述 (Q&A)</h2>
-                    <div v-for="(qa, i) in selectedChar.sections.selfIntro" :key="i" class="space-y-1 mb-2 p-2 manga-border-sm bg-gray-50">
-                        <input v-model="qa.q" placeholder="问题 Q" class="w-full manga-border-sm p-1 text-xs font-bold">
-                        <textarea v-model="qa.a" placeholder="回答 A" class="w-full manga-border-sm p-1 text-xs" rows="1"></textarea>
-                        <button @click="selectedChar.sections.selfIntro.splice(i,1)" class="text-red-500 text-xs">删除问答</button>
+                    <div v-for="(qa, i) in selectedChar.sections.selfIntro" :key="i" class="space-y-1 mb-2 p-1.5 manga-border-sm bg-gray-50">
+                        <input v-model="qa.q" placeholder="问题 Q" class="w-full manga-border-sm p-1 font-bold">
+                        <textarea v-model="qa.a" placeholder="回答 A" class="w-full manga-border-sm p-1" rows="1"></textarea>
+                        <button @click="selectedChar.sections.selfIntro.splice(i,1)" class="text-red-500">删除问答</button>
                     </div>
-                    <button @click="selectedChar.sections.selfIntro.push({q:'', a:''})" class="text-xs underline">+ 追加自述 Q&A</button>
+                    <button @click="selectedChar.sections.selfIntro.push({q:'', a:''})" class="underline">+ 追加自述 Q&A</button>
                 </div>
-
-                <!-- 作者/官方访谈 -->
                 <div>
                     <h2 class="manga-title mb-2">官方/许斐刚访谈</h2>
-                    <textarea v-model="selectedChar.sections.interview" rows="3" class="w-full manga-border-sm p-2 text-sm"></textarea>
+                    <textarea v-model="selectedChar.sections.interview" rows="2" class="w-full manga-border-sm p-1"></textarea>
                 </div>
             </div>
 
-            <!-- 物品检查 (带图片说明与图片上传安全限制) -->
-            <div class="manga-border bg-white p-6">
+            <!-- 物品检查 -->
+            <div class="manga-border bg-white p-4 md:p-6">
                 <h2 class="manga-title mb-4">随身物品检查</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div v-for="(item, idx) in selectedChar.itemsCheck" :key="idx" class="manga-border-sm p-3 bg-gray-50 relative">
-                        <button @click="selectedChar.itemsCheck.splice(idx,1)" class="absolute top-1 right-1 text-red-600 text-xs font-bold">X</button>
-                        <img v-if="item.img" :src="item.img" class="w-full h-32 object-contain mb-2">
-                        <input type="file" @change="e => uploadItemImage(e, item)" accept="image/*" class="text-xs mb-2">
-                        <input v-model="item.name" placeholder="物品名称" class="w-full manga-border-sm p-1 text-xs font-bold mb-1">
-                        <textarea v-model="item.desc" placeholder="物品说明" class="w-full manga-border-sm p-1 text-xs" rows="2"></textarea>
+                    <div v-for="(item, idx) in selectedChar.itemsCheck" :key="idx" class="manga-border-sm p-2 bg-gray-50 relative text-xs">
+                        <button @click="selectedChar.itemsCheck.splice(idx,1)" class="absolute top-1 right-1 text-red-600 font-bold">X</button>
+                        <img v-if="item.img" :src="item.img" class="w-full h-28 object-contain mb-1">
+                        <input type="file" @change="e => uploadItemImage(e, item)" accept="image/*" class="mb-1 text-xs">
+                        <input v-model="item.name" placeholder="物品名称" class="w-full manga-border-sm p-1 font-bold mb-1">
+                        <textarea v-model="item.desc" placeholder="物品说明" class="w-full manga-border-sm p-1" rows="2"></textarea>
                     </div>
                 </div>
-                <button @click="selectedChar.itemsCheck.push({name:'', desc:'', img:''})" class="manga-border-sm text-xs px-3 py-1 bg-black text-white">+ 追加检查物品</button>
+                <button @click="selectedChar.itemsCheck.push({name:'', desc:'', img:''})" class="manga-border-sm text-xs px-2 py-1 bg-black text-white">+ 追加物品</button>
             </div>
 
-            <!-- 公式书页面扫描件补充 (支持龙马10.5等多张图片) -->
-            <div class="manga-border bg-white p-6">
+            <!-- 公式书原图 -->
+            <div class="manga-border bg-white p-4 md:p-6">
                 <h2 class="manga-title mb-4">官方公式书原页图集</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div v-for="(pImg, idx) in selectedChar.formulaPageImages" :key="idx" class="manga-border-sm p-1 relative">
-                        <img :src="pImg" class="w-full h-48 object-cover">
-                        <button @click="selectedChar.formulaPageImages.splice(idx,1)" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1">X</button>
+                        <img :src="pImg" class="w-full h-40 object-cover">
+                        <button @click="selectedChar.formulaPageImages.splice(idx,1)" class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1 font-bold">X</button>
                     </div>
                 </div>
-                <input type="file" @change="uploadFormulaPageImage" accept="image/*" class="text-sm">
+                <input type="file" @change="uploadFormulaPageImage" accept="image/*" class="text-xs">
             </div>
 
-            <!-- 用户自定义扩展项目 -->
-            <div class="manga-border bg-white p-6">
+            <!-- 自定义板块 -->
+            <div class="manga-border bg-white p-4 md:p-6">
                 <h2 class="manga-title mb-4">用户自定义追加板块</h2>
-                <div v-for="(cust, i) in selectedChar.customSections" :key="i" class="mb-4 manga-border-sm p-3">
-                    <div class="flex justify-between mb-2">
-                        <input v-model="cust.title" placeholder="自定义标题" class="font-bold manga-border-sm p-1 text-sm">
-                        <button @click="selectedChar.customSections.splice(i,1)" class="text-red-600 text-xs font-bold">删除此板块</button>
+                <div v-for="(cust, i) in selectedChar.customSections" :key="i" class="mb-3 manga-border-sm p-2 text-xs">
+                    <div class="flex justify-between mb-1">
+                        <input v-model="cust.title" placeholder="自定义标题" class="font-bold manga-border-sm p-1">
+                        <button @click="selectedChar.customSections.splice(i,1)" class="text-red-600 font-bold">删除板块</button>
                     </div>
-                    <textarea v-model="cust.content" placeholder="板块内容..." class="w-full manga-border-sm p-2 text-sm" rows="3"></textarea>
+                    <textarea v-model="cust.content" placeholder="板块内容..." class="w-full manga-border-sm p-1" rows="2"></textarea>
                 </div>
-                <button @click="selectedChar.customSections.push({title:'', content:''})" class="manga-border-sm text-xs px-3 py-1 bg-black text-white">+ 追加自定义板块</button>
+                <button @click="selectedChar.customSections.push({title:'', content:''})" class="manga-border-sm text-xs px-2 py-1 bg-black text-white">+ 追加板块</button>
             </div>
-
         </div>
     </main>
 </div>
+
 <script>
 const { createApp, ref, onMounted, nextTick } = Vue;
 
-// 默认学校数据
 const defaultSchools = [
     { id: 'seigaku', name: '青春学园', images: [], timeline: [], maps: [] },
     { id: 'hyotei', name: '冰帝学园', images: [], timeline: [], maps: [] },
@@ -338,21 +305,11 @@ const defaultSchools = [
     { id: 'rokkaku', name: '六角中学', images: [], timeline: [], maps: [] }
 ];
 
-// 角色基准基础资料字段映射
 const profileLabels = {
-    birthday: '出生年月日',
-    height: '身高',
-    weight: '体重',
-    bloodType: '血型',
-    playStyle: '打球风格',
-    maker: '爱用厂家',
-    favoriteFood: '喜欢的食物',
-    subject: '擅长科目',
-    hobby: '兴趣',
-    family: '家族构成',
-    fatherJob: '父亲职业',
-    color: '喜欢的颜色',
-    type: '喜欢的类型'
+    birthday: '出生年月日', height: '身高', weight: '体重', bloodType: '血型',
+    playStyle: '打球风格', maker: '爱用厂家', favoriteFood: '喜欢的食物',
+    subject: '擅长科目', hobby: '兴趣', family: '家族构成',
+    fatherJob: '父亲职业', color: '喜欢的颜色', type: '喜欢的类型'
 };
 
 createApp({
@@ -361,32 +318,19 @@ createApp({
         const schools = ref(JSON.parse(localStorage.getItem('teni_schools')) || defaultSchools);
         const characters = ref(JSON.parse(localStorage.getItem('teni_characters')) || []);
         
-        const currentView = ref('school'); // 'school' | 'character'
+        const currentView = ref('school');
         const selectedSchool = ref(null);
         const selectedChar = ref(null);
-        
         const radarParamNames = ['速度', '力量', '耐力', '精神力', '技术'];
         let chartInstance = null;
 
-        // 加载默认示例角色（如：越前龙马）
         if (characters.value.length === 0) {
             characters.value.push({
-                id: 'ryoma_' + Date.now(),
-                schoolId: 'seigaku',
-                name: '越前龙马',
-                isCustom: false,
+                id: 'ryoma_' + Date.now(), schoolId: 'seigaku', name: '越前龙马', isCustom: false,
                 baseProfile: {
-                    birthday: '12月24日',
-                    height: '151cm',
-                    weight: '50kg',
-                    bloodType: 'O型',
-                    playStyle: '全能型',
-                    maker: 'BRIDGESTONE',
-                    favoriteFood: '日式蒸蛋、Ponta葡萄味',
-                    subject: '英语',
-                    hobby: '入浴剂收集',
-                    family: '父、母、菜菜子、卡鲁宾',
-                    fatherJob: '寺庙住持（原职业网球选手）',
+                    birthday: '12月24日', height: '151cm', weight: '50kg', bloodType: 'O型',
+                    playStyle: '全能型', maker: 'BRIDGESTONE', favoriteFood: '日式蒸蛋、Ponta',
+                    subject: '英语', hobby: '入浴剂收集', family: '父、母、菜菜子、卡鲁宾', fatherJob: '寺庙住持',
                     color: [ { content: '银色', version: '10.5' }, { content: '红色', version: '20.5' } ],
                     type: '意志坚强的女孩子'
                 },
@@ -398,11 +342,10 @@ createApp({
                 dayRoutine: { school: [{ time: '06:45', event: '晨练' }], holiday: [{ time: '09:00', event: '和卡鲁宾玩' }] },
                 historyTimeline: [{ age: '12岁', event: '进入青春学园网球部' }],
                 sections: { personality: '', othersComments: [], anecdotes: '', selfIntro: [], interview: '' },
-                itemsCheck: [],
-                formulaPageImages: [],
-                customSections: []
+                itemsCheck: [], formulaPageImages: [], customSections: []
             });
-            saveData();
+            localStorage.setItem('teni_schools', JSON.stringify(schools.value));
+            localStorage.setItem('teni_characters', JSON.stringify(characters.value));
         }
 
         const selectSchool = (school) => {
@@ -418,38 +361,19 @@ createApp({
             nextTick(() => renderRadarChart());
         };
 
-        const getSchoolCharacters = (schoolId) => {
-            return characters.value.filter(c => c.schoolId === schoolId);
-        };
-
-        const getSchoolName = (schoolId) => {
-            const s = schools.value.find(s => s.id === schoolId);
-            return s ? s.name : '';
-        };
+        const getSchoolCharacters = (schoolId) => characters.value.filter(c => c.schoolId === schoolId);
+        const getSchoolName = (schoolId) => (schools.value.find(s => s.id === schoolId) || {}).name || '';
 
         const addCharacter = (schoolId) => {
-            const name = prompt('请输入新角色/原创角色名字：');
+            const name = prompt('请输入名字：');
             if (!name) return;
             const newChar = {
-                id: 'char_' + Date.now(),
-                schoolId: schoolId,
-                name: name,
-                isCustom: true,
-                baseProfile: {
-                    birthday: '', height: '', weight: '', bloodType: '',
-                    playStyle: '', maker: '', favoriteFood: '', subject: '',
-                    hobby: '', family: '', fatherJob: '',
-                    color: [{ content: '', version: '' }],
-                    type: ''
-                },
+                id: 'char_' + Date.now(), schoolId, name, isCustom: true,
+                baseProfile: { birthday:'', height:'', weight:'', bloodType:'', playStyle:'', maker:'', favoriteFood:'', subject:'', hobby:'', family:'', fatherJob:'', color:[{content:'',version:''}], type:'' },
                 radarDatasets: [{ label: '最新公式书', data: [3, 3, 3, 3, 3] }],
-                radarReviews: {},
-                dayRoutine: { school: [], holiday: [] },
-                historyTimeline: [],
+                radarReviews: {}, dayRoutine: { school: [], holiday: [] }, historyTimeline: [],
                 sections: { personality: '', othersComments: [], anecdotes: '', selfIntro: [], interview: '' },
-                itemsCheck: [],
-                formulaPageImages: [],
-                customSections: []
+                itemsCheck: [], formulaPageImages: [], customSections: []
             };
             characters.value.push(newChar);
             selectCharacter(newChar);
@@ -457,6 +381,118 @@ createApp({
         };
 
         const deleteCharacter = (id) => {
-            if (confirm('确定删除此角色及其所有资料吗？')) {
+            if (confirm('确定删除此角色吗？')) {
                 characters.value = characters.value.filter(c => c.id !== id);
-            
+                selectedChar.value = null;
+                saveData();
+            }
+        };
+
+        const renderRadarChart = () => {
+            const ctx = document.getElementById('radarChart');
+            if (!ctx || !selectedChar.value) return;
+            if (chartInstance) chartInstance.destroy();
+
+            const datasets = selectedChar.value.radarDatasets.map((ds, index) => {
+                const colors = ['rgba(0, 0, 0, 0.6)', 'rgba(100, 100, 100, 0.5)', 'rgba(180, 180, 180, 0.4)'];
+                return {
+                    label: ds.label || `版本 ${index + 1}`,
+                    data: ds.data,
+                    backgroundColor: colors[index % colors.length],
+                    borderColor: '#000', borderWidth: 2, pointBackgroundColor: '#000'
+                };
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: { labels: radarParamNames, datasets },
+                options: { responsive: true, scales: { r: { min: 0, max: 7, ticks: { stepSize: 1 } } } }
+            });
+        };
+
+        const updateChart = () => { if (chartInstance) chartInstance.update(); };
+        const addRadarDataset = () => {
+            selectedChar.value.radarDatasets.push({ label: '新公式书版本', data: [3, 3, 3, 3, 3] });
+            nextTick(() => renderRadarChart());
+        };
+
+        const handleImageUpload = (file, callback) => {
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('图片必须小于2MB！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => callback(e.target.result);
+            reader.readAsDataURL(file);
+        };
+
+        const uploadSchoolImage = (e) => {
+            handleImageUpload(e.target.files[0], (base64) => {
+                if (!selectedSchool.value.images) selectedSchool.value.images = [];
+                selectedSchool.value.images.push(base64);
+                saveData();
+            });
+        };
+
+        const uploadSchoolMap = (e) => {
+            handleImageUpload(e.target.files[0], (base64) => {
+                if (!selectedSchool.value.maps) selectedSchool.value.maps = [];
+                selectedSchool.value.maps.push(base64);
+                saveData();
+            });
+        };
+
+        const uploadItemImage = (e, item) => { handleImageUpload(e.target.files[0], (b64) => { item.img = b64; saveData(); }); };
+        const uploadFormulaPageImage = (e) => { handleImageUpload(e.target.files[0], (b64) => { selectedChar.value.formulaPageImages.push(b64); saveData(); }); };
+
+        const saveData = () => {
+            localStorage.setItem('teni_schools', JSON.stringify(schools.value));
+            localStorage.setItem('teni_characters', JSON.stringify(characters.value));
+            alert('保存成功！');
+        };
+
+        const exportData = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ schools: schools.value, characters: characters.value }));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `网球王子数据库备份.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        };
+
+        const importData = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (imported.schools && imported.characters) {
+                        schools.value = imported.schools;
+                        characters.value = imported.characters;
+                        saveData();
+                        location.reload();
+                    }
+                } catch (err) { alert('文件无效！'); }
+            };
+            reader.readAsText(file);
+        };
+
+        onMounted(() => {
+            if (schools.value.length > 0) selectSchool(schools.value[0]);
+        });
+
+        return {
+            sidebarOpen, schools, characters, currentView, selectedSchool, selectedChar,
+            profileLabels, radarParamNames, selectSchool, selectCharacter, getSchoolCharacters,
+            getSchoolName, addCharacter, deleteCharacter, updateChart, addRadarDataset,
+            uploadSchoolImage, uploadSchoolMap, uploadItemImage, uploadFormulaPageImage,
+            saveData, exportData, importData
+        };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
