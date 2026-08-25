@@ -1,12 +1,11 @@
 // script.js
 if(typeof Vue==='undefined'){
-  document.body.innerHTML='<div style="color:#c00;padding:40px;text-align:center;font-family:monospace;">⚠️ Vue.js 読み込み失敗<br>ページを更新してください</div>';
+  document.body.innerHTML='<div style="color:#c00;padding:40px;text-align:center;font-family:monospace;font-size:16px;">⚠️ Vue.js 読み込み失敗<br>ページを更新してください</div>';
   throw new Error('Vue not loaded');
 }
 
 const {createApp,ref,watch}=Vue;
 
-// 字段定义
 const singleVersionFields = [
   'class','birthday','birthTime','zodiac','bloodType',
   'footSize','eyesight','dominantHand',
@@ -40,11 +39,10 @@ const baseProfileLabels = {
   gift:'大切な人へのプレゼント'
 };
 
-// 学校配色映射
 const schoolColorMap = {
   'seigaku':'#1a4d8f',
   'hyotei':'#4a5568',
-  'rikkai':'#b7791f',
+  'rikkai':'#c9a227',
   'st-rudolph':'#c53030',
   'rokaku':'#dd6b20',
   'yamabuki':'#48bb78',
@@ -69,7 +67,6 @@ createApp({
     const nav=ref('schools');
     const mapPreview=ref(null);
 
-    // 学校数据
     const schools=ref(JSON.parse(localStorage.getItem('t_s')||'null')||[
       {id:'seigaku',name:'青春学園',captain:'手塚国光',motto:'質実剛健',schoolColor:'青/白',description:'東京都の伝統校。テニス部は全国常連。',events:[
         {month:'4月',name:'入学式'},{month:'4月',name:'始業式'},{month:'4月',name:'新入生歓迎会'},
@@ -95,7 +92,11 @@ createApp({
     const selSchool=ref(null);
     const selChar=ref(null);
 
-    // 初始化示例数据
+    // 默认选中第一个学校
+    if(schools.value.length && !selSchool.value){
+      selSchool.value = schools.value[2]; // 立海大
+    }
+
     if(!chars.value.length){
       chars.value.push({
         id:'r1',schoolId:'rikkai',name:'仁王雅治',
@@ -152,7 +153,7 @@ createApp({
       });
     }
 
-    // 数据迁移与初始化
+    // 数据迁移
     chars.value.forEach(c=>{
       if(!c.baseProfile) c.baseProfile = createBaseProfile();
       singleVersionFields.forEach(k=>{ if(!(k in c.baseProfile)) c.baseProfile[k] = ''; });
@@ -172,7 +173,6 @@ createApp({
     const getChars=(sid)=>chars.value.filter(c=>c.schoolId===sid);
     const getSchoolName=(sid)=>(schools.value.find(s=>s.id===sid)||{}).name||'';
 
-    // 获取选手简介
     const getProfileBrief=(c)=>{
       const bp=c.baseProfile;
       if(!bp) return '';
@@ -202,15 +202,17 @@ createApp({
     const save=()=>{
       localStorage.setItem('t_s',JSON.stringify(schools.value));
       localStorage.setItem('t_c',JSON.stringify(chars.value));
-      // 使用更低调的保存提示
       const toast=document.createElement('div');
       toast.textContent='保存しました';
-      toast.style.cssText='position:fixed;top:20px;right:20px;background:#000;color:#fff;padding:12px 24px;font-size:12px;font-weight:900;z-index:9999;border:4px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,0.2);';
+      toast.style.cssText='position:fixed;top:20px;right:20px;background:#000;color:#fff;padding:12px 24px;font-size:12px;font-weight:900;z-index:9999;border:4px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,0.2);animation:fadeIn 0.2s;';
       document.body.appendChild(toast);
-      setTimeout(()=>toast.remove(),1500);
+      setTimeout(()=>{
+        toast.style.opacity='0';
+        toast.style.transition='opacity 0.3s';
+        setTimeout(()=>toast.remove(),300);
+      },1200);
     };
 
-    // 自动保存
     watch([schools,chars],()=>{
       localStorage.setItem('t_s',JSON.stringify(schools.value));
       localStorage.setItem('t_c',JSON.stringify(chars.value));
