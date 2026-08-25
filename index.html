@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>テニプリDB · 漫畫公式書</title>
   <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
-  <style>
-    /* CSS 在第二部分 */
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app" v-cloak>
   <!-- 顶部导航 -->
-  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;border-bottom:5px solid #000;padding-bottom:12px;">
+  <div class="top-nav">
     <button @click="nav='schools'" :class="nav==='schools'?'mbtn-b':''">🏫 学校</button>
     <button @click="nav='chars'" :class="nav==='chars'?'mbtn-b':''">🎾 選手</button>
-    <button @click="save" style="margin-left:auto">💾 保存</button>
+    <button @click="save" style="margin-left:auto;">💾 保存</button>
   </div>
 
   <!-- ====== 学校页面 ====== -->
@@ -26,16 +24,16 @@
            @click="selSchool=s" 
            class="school-item" 
            :class="selSchool?.id===s.id?'sel':''">
-        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px;">
+        <div class="school-name-row">
           <span>{{s.name}}</span>
-          <span style="font-size:12px;background:#fff;color:#000;padding:0 8px;border:2px solid #000;" v-if="selSchool?.id===s.id">選択中</span>
-          <span style="font-size:11px;opacity:0.7;">{{getChars(s.id).length}}人</span>
+          <span class="badge" v-if="selSchool?.id===s.id">選択中</span>
+          <span class="count">{{getChars(s.id).length}}人</span>
         </div>
-        <div v-if="s.captain" style="font-size:12px;margin-top:3px;opacity:0.8;">部長: {{s.captain}}</div>
+        <div v-if="s.captain" class="captain">{{s.captain}}</div>
       </div>
     </div>
 
-    <!-- 学校详情 + 地图上传 -->
+    <!-- 学校详情 -->
     <div v-if="selSchool" class="box">
       <h2>{{selSchool.name}}</h2>
       <div class="asym-grid">
@@ -45,28 +43,28 @@
           <input v-model="selSchool.schoolColor" placeholder="代表色">
           <textarea v-model="selSchool.description" rows="3" placeholder="概要"></textarea>
         </div>
-        <div style="border-left:4px solid #000;padding-left:14px;">
-          <div style="font-weight:900;font-size:13px;background:#000;color:#fff;padding:2px 10px;display:inline-block;">DATA</div>
-          <div style="font-size:12px;margin-top:8px;">選手数: {{getChars(selSchool.id).length}}人</div>
+        <div class="data-panel">
+          <div class="data-label">DATA</div>
+          <div class="data-count">選手数: {{getChars(selSchool.id).length}}人</div>
         </div>
       </div>
 
       <!-- 地图上传 -->
       <div class="map-area">
         <span class="map-label">🗺️ 学校地图 · 周边地图</span>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:140px;">
-            <label style="font-size:12px;font-weight:bold;display:block;margin:4px 0;">学校地图</label>
+        <div class="map-row">
+          <div>
+            <label>学校地图</label>
             <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'schoolMap')">
             <img v-if="selSchool.schoolMap" :src="selSchool.schoolMap" class="map-thumb" @click="openMapPreview(selSchool.schoolMap)">
           </div>
-          <div style="flex:1;min-width:140px;">
-            <label style="font-size:12px;font-weight:bold;display:block;margin:4px 0;">周边地图</label>
+          <div>
+            <label>周边地图</label>
             <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'areaMap')">
             <img v-if="selSchool.areaMap" :src="selSchool.areaMap" class="map-thumb" @click="openMapPreview(selSchool.areaMap)">
           </div>
         </div>
-        <div style="font-size:11px;color:#333;margin-top:6px;border-top:2px solid #000;padding-top:4px;">※ クリックで拡大表示</div>
+        <div class="map-hint">※ クリックで拡大表示</div>
       </div>
 
       <!-- 年间活动 -->
@@ -74,15 +72,15 @@
       <div v-for="(e, i) in selSchool.events" :key="i" class="school-event">
         <input v-model="e.month" class="month" placeholder="4月">
         <input v-model="e.name" class="event" placeholder="入学式">
-        <button @click="selSchool.events.splice(i,1)" style="padding:2px 10px;">×</button>
+        <button @click="selSchool.events.splice(i,1)">×</button>
       </div>
-      <button @click="selSchool.events.push({month:'',name:''})" style="font-size:11px;margin-top:4px;">+ 行事追加</button>
+      <button @click="selSchool.events.push({month:'',name:''})" class="add-btn">+ 行事追加</button>
       
-      <button @click="addChar(selSchool.id)" style="margin-top:14px;">+ 選手追加</button>
-      <div class="grid-3" style="margin-top:12px;">
+      <button @click="addChar(selSchool.id)" class="add-char-btn">+ 選手追加</button>
+      <div class="grid-3">
         <div v-for="c in getChars(selSchool.id)" :key="c.id" @click="selChar=c;nav='chars'" class="char-card">
           <div class="char-avatar">{{c.name[0]}}</div>
-          <div style="font-size:13px;font-weight:bold;margin-top:4px;">{{c.name}}</div>
+          <div class="char-name">{{c.name}}</div>
         </div>
       </div>
     </div>
@@ -91,39 +89,39 @@
   <!-- ====== 选手列表 ====== -->
   <div v-if="nav==='chars' && !selChar">
     <div v-for="s in schools" :key="s.id" class="box">
-      <h2>{{s.name}} <span style="font-size:11px;background:#fff;color:#000;padding:0 8px;border:2px solid #000;margin-left:8px;">{{getChars(s.id).length}}</span></h2>
-      <div v-for="c in getChars(s.id)" :key="c.id" @click="selChar=c" style="padding:10px;border:4px solid #000;margin:5px 0;cursor:pointer;display:flex;align-items:center;gap:14px;background:#fffdf9;">
-        <div style="width:48px;height:48px;background:#d9d4cc;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;border:3px solid #000;">{{c.name[0]}}</div>
-        <span style="font-weight:bold;font-size:16px;">{{c.name}}</span>
+      <h2>{{s.name}} <span class="count-badge">{{getChars(s.id).length}}</span></h2>
+      <div v-for="c in getChars(s.id)" :key="c.id" @click="selChar=c" class="char-list-item">
+        <div class="char-avatar-sm">{{c.name[0]}}</div>
+        <span>{{c.name}}</span>
       </div>
     </div>
   </div>
 
   <!-- ====== 选手详细编辑 ====== -->
-  <div v-if="nav==='chars' && selChar" style="padding-bottom:70px;">
-    <button @click="selChar=null" style="margin-bottom:12px;">← 戻る</button>
+  <div v-if="nav==='chars' && selChar" class="detail-page">
+    <button @click="selChar=null" class="back-btn">← 戻る</button>
 
     <!-- 基础信息 -->
     <div class="box">
-      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;">
-        <div style="width:80px;height:80px;background:#d9d4cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:30px;border:4px solid #000;">{{selChar.name[0]}}</div>
+      <div class="char-header">
+        <div class="char-avatar-lg">{{selChar.name[0]}}</div>
         <div>
-          <h2 style="margin:0;">{{selChar.name}}</h2>
-          <div style="font-size:14px;color:#333;margin-top:4px;">{{getSchoolName(selChar.schoolId)}}</div>
+          <h2>{{selChar.name}}</h2>
+          <div class="school-name">{{getSchoolName(selChar.schoolId)}}</div>
         </div>
       </div>
 
       <div v-for="(label, key) in baseProfileLabels" :key="key" class="profile-row">
         <span class="label">{{label}}</span>
-        <div v-if="multiVersionFields.includes(key)" style="flex:1;">
+        <div v-if="multiVersionFields.includes(key)" class="multi-version">
           <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="multi-version-item">
-            <input v-model="item.content" placeholder="内容" style="flex:1;border-width:3px;">
-            <input v-model="item.version" placeholder="ver" style="width:80px;border-width:3px;">
-            <button @click="selChar.baseProfile[key].splice(idx,1)" style="padding:2px 10px;">×</button>
+            <input v-model="item.content" placeholder="内容">
+            <input v-model="item.version" placeholder="ver" class="ver-input">
+            <button @click="selChar.baseProfile[key].splice(idx,1)">×</button>
           </div>
-          <button @click="selChar.baseProfile[key].push({content:'',version:''})" style="font-size:11px;margin-top:2px;">+ 版本追加</button>
+          <button @click="selChar.baseProfile[key].push({content:'',version:''})" class="add-ver-btn">+ 版本追加</button>
         </div>
-        <input v-else v-model="selChar.baseProfile[key]" :placeholder="label" style="flex:1;border-width:3px;">
+        <input v-else v-model="selChar.baseProfile[key]" :placeholder="label">
       </div>
     </div>
 
@@ -132,7 +130,7 @@
       <h2>一句话评价</h2>
       <div class="oneword-box">
         <input v-model="selChar.oneWord.text" class="oneword-input" placeholder="输入一句话评价...">
-        <div class="oneword-by">—— <input v-model="selChar.oneWord.by" placeholder="评价者" style="background:transparent;border:none;border-bottom:3px solid #ccc;color:#ccc;width:120px;font-size:12px;"></div>
+        <div class="oneword-by">—— <input v-model="selChar.oneWord.by" placeholder="评价者" class="oneword-author"></div>
       </div>
     </div>
 
@@ -142,22 +140,22 @@
       <div v-for="(sec, idx) in selChar.personalitySections" :key="idx" class="personality-section">
         <h5>
           <input v-model="sec.title" placeholder="section标题">
-          <button @click="selChar.personalitySections.splice(idx,1)" style="padding:2px 10px;font-size:10px;">×</button>
+          <button @click="selChar.personalitySections.splice(idx,1)">×</button>
         </h5>
         <textarea v-model="sec.content" rows="3" placeholder="内容..."></textarea>
       </div>
-      <button @click="selChar.personalitySections.push({title:'',content:''})" style="font-size:11px;margin-top:4px;">+ 追加section</button>
+      <button @click="selChar.personalitySections.push({title:'',content:''})" class="add-btn">+ 追加section</button>
     </div>
 
     <!-- 同学相处 -->
     <div class="box">
       <h2>与同学的相处方式</h2>
       <div v-for="(rel, i) in selChar.classmates" :key="i" class="comment-box">
-        <button @click="selChar.classmates.splice(i,1)" style="position:absolute;top:4px;right:4px;padding:2px 10px;font-size:10px;">×</button>
-        <input v-model="rel.name" placeholder="同学名字" style="font-weight:bold;width:160px;border-width:3px;">
+        <button @click="selChar.classmates.splice(i,1)" class="del-btn">×</button>
+        <input v-model="rel.name" placeholder="同学名字" class="comment-name">
         <textarea v-model="rel.desc" rows="2" placeholder="相处方式描述..."></textarea>
       </div>
-      <button @click="selChar.classmates.push({name:'',desc:''})" style="margin-top:6px;">+ 追加</button>
+      <button @click="selChar.classmates.push({name:'',desc:''})" class="add-btn">+ 追加</button>
     </div>
 
     <!-- 一日行程 -->
@@ -167,52 +165,52 @@
       <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
         <input v-model="item.time" class="time" placeholder="7:00">
         <input v-model="item.event" class="event" placeholder="起床・朝練">
-        <button @click="selChar.dayRoutine.school.splice(i,1)" style="padding:2px 10px;">×</button>
+        <button @click="selChar.dayRoutine.school.splice(i,1)">×</button>
       </div>
-      <button @click="selChar.dayRoutine.school.push({time:'',event:''})" style="font-size:11px;margin-top:4px;">+ 追加</button>
-      <h4 style="margin-top:12px;">【休日】</h4>
+      <button @click="selChar.dayRoutine.school.push({time:'',event:''})" class="add-btn">+ 追加</button>
+      <h4>【休日】</h4>
       <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
         <input v-model="item.time" class="time" placeholder="9:00">
         <input v-model="item.event" class="event" placeholder="自主練">
-        <button @click="selChar.dayRoutine.holiday.splice(i,1)" style="padding:2px 10px;">×</button>
+        <button @click="selChar.dayRoutine.holiday.splice(i,1)">×</button>
       </div>
-      <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" style="font-size:11px;margin-top:4px;">+ 追加</button>
+      <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" class="add-btn">+ 追加</button>
     </div>
 
     <!-- 访谈Q&A -->
     <div class="box">
       <h2>访谈Q&A</h2>
       <div v-for="(qa, i) in selChar.interviewQA" :key="i" class="interview-qa">
-        <button @click="selChar.interviewQA.splice(i,1)" style="float:right;padding:2px 12px;font-size:10px;">×</button>
-        <div class="q">Q: <input v-model="qa.q" placeholder="问题" style="width:calc(100% - 40px);border:none;border-bottom:3px solid #000;background:transparent;font-weight:bold;"></div>
-        <div class="a">A: <textarea v-model="qa.a" rows="3" placeholder="回答" style="width:100%;margin-top:6px;border-width:3px;"></textarea></div>
-        <div class="source">出处: <input v-model="qa.source" placeholder="例：pair puri vol.4" style="width:200px;font-size:11px;border:none;border-bottom:2px solid #000;background:transparent;"></div>
+        <button @click="selChar.interviewQA.splice(i,1)" class="del-btn">×</button>
+        <div class="q">Q: <input v-model="qa.q" placeholder="问题" class="qa-q-input"></div>
+        <div class="a">A: <textarea v-model="qa.a" rows="3" placeholder="回答"></textarea></div>
+        <div class="source">出处: <input v-model="qa.source" placeholder="例：pair puri vol.4" class="source-input"></div>
       </div>
-      <button @click="selChar.interviewQA.push({q:'',a:'',source:''})" style="margin-top:6px;">+ 访谈追加</button>
+      <button @click="selChar.interviewQA.push({q:'',a:'',source:''})" class="add-btn">+ 访谈追加</button>
     </div>
 
     <!-- 本人自述 -->
     <div class="box">
       <h2>本人のコメント Q&A</h2>
       <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-box">
-        <button @click="selChar.sections.selfIntro.splice(i,1)" style="float:right;padding:2px 10px;font-size:10px;">×</button>
-        <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" style="width:calc(100% - 30px);border:none;border-bottom:3px solid #000;background:transparent;"></div>
-        <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答" style="width:100%;margin-top:6px;border-width:3px;"></textarea></div>
-        <input v-model="qa.source" placeholder="出处" style="font-size:11px;color:#333;margin-top:5px;border-width:3px;">
+        <button @click="selChar.sections.selfIntro.splice(i,1)" class="del-btn">×</button>
+        <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" class="qa-q-input"></div>
+        <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答"></textarea></div>
+        <input v-model="qa.source" placeholder="出处" class="source-input">
       </div>
-      <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" style="margin-top:6px;">+ Q&A追加</button>
+      <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" class="add-btn">+ Q&A追加</button>
     </div>
 
     <!-- 他人评价 -->
     <div class="box">
       <h2>他人評価</h2>
       <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-box">
-        <button @click="selChar.sections.othersComments.splice(i,1)" style="position:absolute;top:4px;right:4px;padding:2px 10px;font-size:10px;">×</button>
-        <input v-model="c.author" placeholder="評価者" style="font-weight:bold;width:160px;border-width:3px;">
+        <button @click="selChar.sections.othersComments.splice(i,1)" class="del-btn">×</button>
+        <input v-model="c.author" placeholder="評価者" class="comment-name">
         <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
-        <input v-model="c.source" placeholder="出处（例：POT公式書20.5）" style="font-size:11px;color:#333;border-width:3px;margin-top:3px;">
+        <input v-model="c.source" placeholder="出处（例：POT公式書20.5）" class="source-input">
       </div>
-      <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" style="margin-top:6px;">+ 評価追加</button>
+      <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" class="add-btn">+ 評価追加</button>
     </div>
 
     <!-- 奇闻趣事 -->
@@ -224,12 +222,12 @@
     <!-- 随身物品 -->
     <div class="box">
       <h2>持ち物チェック</h2>
-      <div v-for="(item, i) in selChar.itemsCheck" :key="i" style="display:flex;gap:6px;margin:4px 0;align-items:center;">
-        <input v-model="item.name" placeholder="物品名" style="flex:1;border-width:3px;">
-        <input v-model="item.desc" placeholder="説明" style="flex:2;border-width:3px;">
-        <button @click="selChar.itemsCheck.splice(i,1)" style="padding:2px 10px;">×</button>
+      <div v-for="(item, i) in selChar.itemsCheck" :key="i" class="item-row">
+        <input v-model="item.name" placeholder="物品名" class="item-name">
+        <input v-model="item.desc" placeholder="説明" class="item-desc">
+        <button @click="selChar.itemsCheck.splice(i,1)">×</button>
       </div>
-      <button @click="selChar.itemsCheck.push({name:'',desc:''})" style="margin-top:6px;">+ 物品追加</button>
+      <button @click="selChar.itemsCheck.push({name:'',desc:''})" class="add-btn">+ 物品追加</button>
     </div>
   </div>
 
@@ -240,13 +238,12 @@
     <button @click="selChar=null;selSchool=null"><span class="ic">☰</span>リスト</button>
   </div>
 
-  <!-- 图片放大预览浮层 -->
+  <!-- 图片放大预览 -->
   <div v-if="mapPreview" class="map-overlay" @click="mapPreview=null">
     <div class="close-hint">✕</div>
     <img :src="mapPreview" @click.stop>
   </div>
 </div>
-<!-- 脚本在第三部分 -->
 <script src="script.js"></script>
 </body>
 </html>
