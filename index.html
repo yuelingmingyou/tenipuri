@@ -10,165 +10,134 @@
 </head>
 <body>
 <div id="app" v-cloak>
-  <!-- 顶部导航 -->
-  <header class="site-header">
-    <div class="header-brand">
-      <div class="brand-mark">テニプリ<br>DB</div>
-      <div class="brand-badge">CHARACTER<br>DATA BOOK</div>
-    </div>
-    <nav class="header-nav">
-      <button @click="nav='schools';selSchool=null;selChar=null" :class="nav==='schools'?'active':''">
-        <span class="nav-emoji">🏫</span>
-        <span class="nav-text">学校</span>
-      </button>
-      <button @click="nav='chars';selSchool=null;selChar=null" :class="nav==='chars'?'active':''">
-        <span class="nav-emoji">🎾</span>
-        <span class="nav-text">選手</span>
-      </button>
-      <button @click="save" class="save-btn">
-        <span class="nav-emoji">💾</span>
-        <span class="nav-text">保存</span>
-      </button>
-    </nav>
+  <!-- 顶部品牌栏（极简，无导航功能） -->
+  <header class="brand-bar">
+    <div class="brand-mark">テニプリDB</div>
+    <div class="brand-sub">CHARACTER DATA BOOK</div>
+    <button @click="save" class="save-icon" title="保存">💾</button>
   </header>
 
-  <!-- ====== 学校页面：固定左右分栏 ====== -->
+  <!-- 页面内嵌导航标签 -->
+  <div class="page-tabs">
+    <button @click="nav='schools';selChar=null" :class="nav==='schools'?'active':''">🏫 学校</button>
+    <button @click="nav='chars';selSchool=null;selChar=null" :class="nav==='chars'?'active':''">🎾 選手</button>
+    <button @click="nav='list';selSchool=null;selChar=null" :class="nav==='list'?'active':''">☰ リスト</button>
+  </div>
+
+  <!-- ====== 学校页面 ====== -->
   <div v-if="nav==='schools'" class="page-schools">
-    <!-- 左侧：学校列表（始终固定） -->
+    <!-- 左侧学校列表 -->
     <aside class="schools-panel">
-      <div class="panel-title">
-        <span class="title-icon">◆</span>
+      <div class="panel-header">
+        <span class="header-icon">◆</span>
         <h2>学校リスト</h2>
-        <span class="title-count">{{schools.length}}</span>
+        <span class="header-count">{{schools.length}}校</span>
       </div>
       
       <div class="school-list">
         <div v-for="s in schools" :key="s.id" 
              @click="selSchool=s" 
-             class="school-row" 
+             class="school-item" 
              :class="selSchool?.id===s.id?'active':''">
-          <div class="row-rank">
+          <div class="item-rank">
             <span v-if="s.id==='rikkai'" class="crown">👑</span>
             <span v-else-if="s.id==='hyotei'" class="silver">🥈</span>
             <span v-else class="dot">●</span>
           </div>
-          <div class="row-body">
-            <div class="row-top">
-              <span class="row-name">{{s.name}}</span>
-              <span class="row-count">{{getChars(s.id).length}}人</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="item-name">{{s.name}}</span>
+              <span class="item-count">{{getChars(s.id).length}}人</span>
             </div>
-            <div v-if="s.captain" class="row-captain">部長 {{s.captain}}</div>
-            <div v-if="s.motto" class="row-motto">「{{s.motto}}」</div>
+            <div v-if="s.captain" class="item-sub">{{s.captain}}</div>
           </div>
-          <div class="row-arrow" v-if="selSchool?.id===s.id">▶</div>
+          <div class="item-arrow" v-if="selSchool?.id===s.id">▶</div>
         </div>
       </div>
     </aside>
 
-    <!-- 右侧：详情内容（独立背景，不会透底） -->
+    <!-- 右侧详情 -->
     <main class="school-main">
-      <!-- 有选中学校时显示详情 -->
       <template v-if="selSchool">
-        <!-- 学校标题卡 -->
+        <!-- 标题卡 -->
         <div class="hero-card" :style="{'--school-color': schoolColorMap[selSchool.id]||'#000'}">
           <div class="hero-badge">{{selSchool.name[0]}}</div>
           <div class="hero-info">
-            <h1 class="hero-name">{{selSchool.name}}</h1>
+            <h1>{{selSchool.name}}</h1>
             <div class="hero-meta">
-              <span class="meta-pill" v-if="selSchool.schoolColor">代表色 {{selSchool.schoolColor}}</span>
-              <span class="meta-pill">選手 {{getChars(selSchool.id).length}}名</span>
+              <span v-if="selSchool.schoolColor">代表色 {{selSchool.schoolColor}}</span>
+              <span>選手 {{getChars(selSchool.id).length}}名</span>
             </div>
-          </div>
-          <div class="hero-deco">
-            <div class="deco-stripes"></div>
           </div>
         </div>
 
-        <!-- 非对称内容网格 -->
+        <!-- 内容网格 -->
         <div class="content-grid">
-          <!-- 主栏 -->
-          <div class="grid-primary">
+          <div class="grid-main">
             <!-- 基本信息 -->
-            <section class="info-section">
-              <div class="section-header">
-                <span class="section-icon">◆</span>
-                <h3>基本情報</h3>
-              </div>
+            <section class="data-box">
+              <div class="box-title">◆ 基本情報</div>
               <div class="form-grid">
                 <div class="field">
                   <label>部長</label>
-                  <input v-model="selSchool.captain" placeholder="手塚国光">
+                  <input v-model="selSchool.captain">
                 </div>
                 <div class="field">
                   <label>校訓</label>
-                  <input v-model="selSchool.motto" placeholder="質実剛健">
+                  <input v-model="selSchool.motto">
                 </div>
                 <div class="field">
                   <label>代表色</label>
-                  <input v-model="selSchool.schoolColor" placeholder="青/白">
+                  <input v-model="selSchool.schoolColor">
                 </div>
                 <div class="field wide">
                   <label>概要</label>
-                  <textarea v-model="selSchool.description" rows="3" placeholder="学校の特徴..."></textarea>
+                  <textarea v-model="selSchool.description" rows="3"></textarea>
                 </div>
               </div>
             </section>
 
             <!-- 年间活动 -->
-            <section class="info-section">
-              <div class="section-header">
-                <span class="section-icon">◆</span>
-                <h3>年間行事予定</h3>
-              </div>
-              <div class="timeline">
-                <div v-for="(e, i) in selSchool.events" :key="i" class="timeline-item">
-                  <div class="time-dot"></div>
-                  <div class="time-month">{{e.month}}</div>
-                  <div class="time-line"></div>
-                  <div class="time-event">{{e.name}}</div>
-                  <button @click="selSchool.events.splice(i,1)" class="time-del">×</button>
+            <section class="data-box">
+              <div class="box-title">◆ 年間行事予定</div>
+              <div class="event-list">
+                <div v-for="(e, i) in selSchool.events" :key="i" class="event-row">
+                  <input v-model="e.month" class="event-month" placeholder="4月">
+                  <div class="event-dot"></div>
+                  <input v-model="e.name" class="event-name" placeholder="入学式">
+                  <button @click="selSchool.events.splice(i,1)" class="event-del">×</button>
                 </div>
               </div>
-              <button @click="selSchool.events.push({month:'',name:''})" class="btn-add">＋ 行事追加</button>
+              <button @click="selSchool.events.push({month:'',name:''})" class="btn-small">＋ 追加</button>
             </section>
           </div>
 
-          <!-- 副栏 -->
-          <div class="grid-secondary">
-            <!-- DATA面板 -->
+          <div class="grid-side">
+            <!-- DATA -->
             <div class="data-block">
-              <div class="data-title">DATA</div>
-              <div class="data-num">{{getChars(selSchool.id).length}}</div>
-              <div class="data-unit">PLAYERS</div>
-              <div class="data-bar"></div>
+              <div class="block-label">DATA</div>
+              <div class="block-num">{{getChars(selSchool.id).length}}</div>
+              <div class="block-unit">PLAYERS</div>
             </div>
 
             <!-- 地图 -->
-            <section class="info-section compact">
-              <div class="section-header">
-                <span class="section-icon">◆</span>
-                <h3>学校地図</h3>
-              </div>
-              <label class="map-zone">
+            <section class="data-box">
+              <div class="box-title">◆ 学校地図</div>
+              <label class="map-upload">
                 <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'schoolMap')">
-                <div v-if="!selSchool.schoolMap" class="map-empty">
-                  <div class="map-plus">＋</div>
-                  <div class="map-label">アップロード</div>
+                <div v-if="!selSchool.schoolMap" class="map-placeholder">
+                  <span>＋</span>
                 </div>
                 <img v-else :src="selSchool.schoolMap" @click="openMapPreview(selSchool.schoolMap)">
               </label>
             </section>
 
-            <section class="info-section compact">
-              <div class="section-header">
-                <span class="section-icon">◆</span>
-                <h3>周辺地図</h3>
-              </div>
-              <label class="map-zone">
+            <section class="data-box">
+              <div class="box-title">◆ 周辺地図</div>
+              <label class="map-upload">
                 <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'areaMap')">
-                <div v-if="!selSchool.areaMap" class="map-empty">
-                  <div class="map-plus">＋</div>
-                  <div class="map-label">アップロード</div>
+                <div v-if="!selSchool.areaMap" class="map-placeholder">
+                  <span>＋</span>
                 </div>
                 <img v-else :src="selSchool.areaMap" @click="openMapPreview(selSchool.areaMap)">
               </label>
@@ -176,35 +145,33 @@
           </div>
         </div>
 
-        <!-- 选手区域 -->
-        <section class="chars-section">
-          <div class="section-divider">
-            <div class="divider-line"></div>
-            <span class="divider-text">所属選手</span>
-            <div class="divider-line"></div>
+        <!-- 选手 -->
+        <section class="chars-area">
+          <div class="area-header">
+            <div class="header-line"></div>
+            <span>所属選手</span>
+            <div class="header-line"></div>
           </div>
-          <button @click="addChar(selSchool.id)" class="btn-add large">＋ 選手追加</button>
+          <button @click="addChar(selSchool.id)" class="btn-add">＋ 選手追加</button>
           <div class="chars-grid">
             <div v-for="c in getChars(selSchool.id)" :key="c.id" 
                  @click="selChar=c;nav='chars'" 
-                 class="char-card">
-              <div class="card-inner">
-                <div class="card-avatar">{{c.name[0]}}</div>
-                <div class="card-bar"></div>
-                <div class="card-name">{{c.name}}</div>
-                <div class="card-sub">{{getProfileBrief(c)}}</div>
+                 class="char-cell">
+              <div class="cell-inner">
+                <div class="cell-avatar">{{c.name[0]}}</div>
+                <div class="cell-bar"></div>
+                <div class="cell-name">{{c.name}}</div>
+                <div class="cell-info">{{getProfileBrief(c)}}</div>
               </div>
             </div>
           </div>
         </section>
       </template>
 
-      <!-- 未选中时显示占位 -->
       <div v-else class="empty-state">
         <div class="empty-box">
-          <div class="empty-ball">🎾</div>
+          <div class="empty-icon">🎾</div>
           <p>学校を選択してください</p>
-          <p class="empty-sub">左のリストから選んでください</p>
         </div>
       </div>
     </main>
@@ -215,70 +182,74 @@
     <div class="chars-container">
       <div v-for="s in schools" :key="s.id" class="school-group">
         <div class="group-header" :style="{'--school-color': schoolColorMap[s.id]||'#000'}">
-          <div class="group-color"></div>
+          <div class="group-stripe"></div>
           <h2>{{s.name}}</h2>
-          <span class="group-num">{{String(getChars(s.id).length).padStart(2,'0')}}</span>
+          <span>{{String(getChars(s.id).length).padStart(2,'0')}}</span>
         </div>
-        <div class="group-list">
+        <div class="group-chars">
           <div v-for="c in getChars(s.id)" :key="c.id" 
                @click="selChar=c" 
-               class="char-row">
-            <span class="row-idx">{{String(getChars(s.id).indexOf(c)+1).padStart(2,'0')}}</span>
-            <div class="row-avatar">{{c.name[0]}}</div>
-            <div class="row-info">
-              <div class="row-name">{{c.name}}</div>
-              <div class="row-class" v-if="c.baseProfile?.class">{{c.baseProfile.class}}</div>
+               class="char-line">
+            <span class="line-num">{{String(getChars(s.id).indexOf(c)+1).padStart(2,'0')}}</span>
+            <div class="line-avatar">{{c.name[0]}}</div>
+            <div class="line-info">
+              <div class="line-name">{{c.name}}</div>
+              <div class="line-class" v-if="c.baseProfile?.class">{{c.baseProfile.class}}</div>
             </div>
-            <span class="row-go">▶</span>
+            <span class="line-go">▶</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ====== 选手详情页（整页替换） ====== -->
-  <div v-if="nav==='chars' && selChar" class="page-detail">
-    <button @click="selChar=null" class="btn-back">
-      <span>←</span>
-      <span>選手リストへ戻る</span>
-    </button>
-
-    <!-- 角色头部 -->
-    <div class="detail-hero">
-      <div class="hero-main">
-        <div class="avatar-wrap">
-          <div class="avatar-bg"></div>
-          <div class="avatar-face">{{selChar.name[0]}}</div>
-        </div>
-        <div class="hero-titles">
-          <div class="hero-label">PLAYER DATA</div>
-          <h1>{{selChar.name}}</h1>
-          <div class="hero-school-tag">{{getSchoolName(selChar.schoolId)}}</div>
+  <!-- ====== 总览列表页 ====== -->
+  <div v-if="nav==='list'" class="page-list">
+    <div class="list-grid">
+      <div v-for="s in schools" :key="s.id" 
+           @click="selSchool=s;nav='schools'" 
+           class="list-card" 
+           :style="{'--school-color': schoolColorMap[s.id]||'#000'}">
+        <div class="card-badge">{{s.name[0]}}</div>
+        <div class="card-info">
+          <div class="card-name">{{s.name}}</div>
+          <div class="card-count">{{getChars(s.id).length}}人</div>
         </div>
       </div>
-      <div class="hero-pattern"></div>
+    </div>
+  </div>
+
+  <!-- ====== 选手详情页 ====== -->
+  <div v-if="nav==='chars' && selChar" class="page-detail">
+    <button @click="selChar=null" class="btn-back">← 選手リストへ戻る</button>
+
+    <div class="detail-hero">
+      <div class="hero-avatar-wrap">
+        <div class="avatar-bg"></div>
+        <div class="avatar-face">{{selChar.name[0]}}</div>
+      </div>
+      <div class="hero-titles">
+        <div class="hero-tag">PLAYER DATA</div>
+        <h1>{{selChar.name}}</h1>
+        <div class="hero-school">{{getSchoolName(selChar.schoolId)}}</div>
+      </div>
     </div>
 
-    <!-- 详情网格 -->
-    <div class="detail-grid">
-      <!-- 左侧主栏 -->
-      <div class="detail-primary">
+    <div class="detail-body">
+      <div class="detail-left">
         <!-- Profile -->
-        <section class="info-section">
-          <div class="section-header large">
-            <span class="section-icon">★</span>
-            <h3>PROFILE</h3>
-          </div>
+        <section class="data-box">
+          <div class="box-title large">★ PROFILE</div>
           <div class="profile-grid">
             <div v-for="(label, key) in baseProfileLabels" :key="key" 
-                 class="profile-cell" 
+                 class="profile-item" 
                  :class="{multi: multiVersionFields.includes(key), wide: ['family','elementary','dailyRoutine'].includes(key)}">
-              <div class="cell-label">{{label}}</div>
-              <div class="cell-input">
+              <div class="item-label">{{label}}</div>
+              <div class="item-input">
                 <template v-if="multiVersionFields.includes(key)">
-                  <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="ver-row">
-                    <input v-model="item.content" placeholder="内容" class="ver-content">
-                    <input v-model="item.version" placeholder="ver" class="ver-ver">
+                  <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="version-line">
+                    <input v-model="item.content" class="ver-content" placeholder="内容">
+                    <input v-model="item.version" class="ver-ver" placeholder="ver">
                     <button @click="selChar.baseProfile[key].splice(idx,1)" class="ver-del">×</button>
                   </div>
                   <button @click="selChar.baseProfile[key].push({content:'',version:''})" class="btn-mini">＋</button>
@@ -289,194 +260,150 @@
           </div>
         </section>
 
-        <!-- 一句话评价 -->
-        <section class="info-section inverse">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>一句话评价</h3>
-          </div>
-          <div class="quote-box">
-            <div class="quote-big">"</div>
-            <input v-model="selChar.oneWord.text" class="quote-input" placeholder="输入一句话评价...">
-            <div class="quote-by">
+        <!-- 一句话 -->
+        <section class="data-box inverse">
+          <div class="box-title">◆ 一句话评价</div>
+          <div class="quote-area">
+            <div class="quote-mark">"</div>
+            <input v-model="selChar.oneWord.text" class="quote-text" placeholder="输入一句话评价...">
+            <div class="quote-from">
               <span>—</span>
               <input v-model="selChar.oneWord.by" placeholder="评价者">
             </div>
           </div>
         </section>
 
-        <!-- 性格分析 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>性格分析</h3>
-          </div>
-          <div class="stack-cards">
-            <div v-for="(sec, idx) in selChar.personalitySections" :key="idx" class="stack-card">
-              <div class="card-num">{{String(idx+1).padStart(2,'0')}}</div>
-              <div class="card-body">
-                <input v-model="sec.title" placeholder="section标题" class="card-title">
+        <!-- 性格 -->
+        <section class="data-box">
+          <div class="box-title">◆ 性格分析</div>
+          <div class="personality-list">
+            <div v-for="(sec, idx) in selChar.personalitySections" :key="idx" class="personality-card">
+              <div class="p-num">{{String(idx+1).padStart(2,'0')}}</div>
+              <div class="p-body">
+                <input v-model="sec.title" placeholder="section标题">
                 <textarea v-model="sec.content" rows="2" placeholder="内容..."></textarea>
               </div>
-              <button @click="selChar.personalitySections.splice(idx,1)" class="card-del">×</button>
+              <button @click="selChar.personalitySections.splice(idx,1)" class="p-del">×</button>
             </div>
           </div>
-          <button @click="selChar.personalitySections.push({title:'',content:''})" class="btn-add">＋ 追加section</button>
+          <button @click="selChar.personalitySections.push({title:'',content:''})" class="btn-small">＋ 追加</button>
         </section>
 
-        <!-- 同学相处 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>与同学的相处方式</h3>
-          </div>
-          <div class="relation-list">
-            <div v-for="(rel, i) in selChar.classmates" :key="i" class="relation-card">
-              <div class="rel-avatar">{{rel.name[0]||'?'}}</div>
-              <div class="rel-body">
-                <input v-model="rel.name" placeholder="同学名字" class="rel-name">
+        <!-- 同学 -->
+        <section class="data-box">
+          <div class="box-title">◆ 与同学的相处方式</div>
+          <div class="classmate-list">
+            <div v-for="(rel, i) in selChar.classmates" :key="i" class="classmate-card">
+              <div class="cm-avatar">{{rel.name[0]||'?'}}</div>
+              <div class="cm-body">
+                <input v-model="rel.name" placeholder="同学名字">
                 <textarea v-model="rel.desc" rows="2" placeholder="相处方式描述..."></textarea>
               </div>
-              <button @click="selChar.classmates.splice(i,1)" class="rel-del">×</button>
+              <button @click="selChar.classmates.splice(i,1)" class="cm-del">×</button>
             </div>
           </div>
-          <button @click="selChar.classmates.push({name:'',desc:''})" class="btn-add">＋ 追加</button>
+          <button @click="selChar.classmates.push({name:'',desc:''})" class="btn-small">＋ 追加</button>
         </section>
 
-        <!-- 一日行程 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>一日のスケジュール</h3>
-          </div>
+        <!-- 行程 -->
+        <section class="data-box">
+          <div class="box-title">◆ 一日のスケジュール</div>
           
-          <h4 class="sub-header">【登校日】</h4>
-          <div class="schedule-list">
-            <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
+          <div class="sched-header">登校日</div>
+          <div class="sched-list">
+            <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="sched-row">
               <div class="sched-dot"></div>
               <input v-model="item.time" class="sched-time" placeholder="7:00">
               <input v-model="item.event" class="sched-event" placeholder="起床・朝練">
               <button @click="selChar.dayRoutine.school.splice(i,1)" class="sched-del">×</button>
             </div>
           </div>
-          <button @click="selChar.dayRoutine.school.push({time:'',event:''})" class="btn-add">＋ 追加</button>
+          <button @click="selChar.dayRoutine.school.push({time:'',event:''})" class="btn-small">＋ 追加</button>
 
-          <h4 class="sub-header">【休日】</h4>
-          <div class="schedule-list">
-            <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
+          <div class="sched-header">休日</div>
+          <div class="sched-list">
+            <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="sched-row">
               <div class="sched-dot"></div>
               <input v-model="item.time" class="sched-time" placeholder="9:00">
               <input v-model="item.event" class="sched-event" placeholder="自主練">
               <button @click="selChar.dayRoutine.holiday.splice(i,1)" class="sched-del">×</button>
             </div>
           </div>
-          <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" class="btn-add">＋ 追加</button>
+          <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" class="btn-small">＋ 追加</button>
         </section>
       </div>
 
-      <!-- 右侧副栏 -->
-      <div class="detail-secondary">
-        <!-- 访谈Q&A -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>访谈Q&A</h3>
-          </div>
-          <div class="qa-list">
+      <div class="detail-right">
+        <!-- 访谈 -->
+        <section class="data-box">
+          <div class="box-title">◆ 访谈Q&A</div>
+          <div class="qa-items">
             <div v-for="(qa, i) in selChar.interviewQA" :key="i" class="qa-card">
-              <div class="qa-head">
-                <span class="qa-num">Q{{i+1}}</span>
+              <div class="qa-top">
+                <span class="qa-label">Q{{i+1}}</span>
                 <button @click="selChar.interviewQA.splice(i,1)" class="qa-del">×</button>
               </div>
-              <input v-model="qa.q" placeholder="问题" class="qa-q">
+              <input v-model="qa.q" placeholder="问题">
               <textarea v-model="qa.a" rows="3" placeholder="回答"></textarea>
               <input v-model="qa.source" placeholder="出处" class="qa-src">
             </div>
           </div>
-          <button @click="selChar.interviewQA.push({q:'',a:'',source:''})" class="btn-add">＋ 访谈追加</button>
+          <button @click="selChar.interviewQA.push({q:'',a:'',source:''})" class="btn-small">＋ 追加</button>
         </section>
 
-        <!-- 本人自述 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>本人のコメント</h3>
-          </div>
-          <div class="qa-list">
+        <!-- 本人 -->
+        <section class="data-box">
+          <div class="box-title">◆ 本人のコメント</div>
+          <div class="qa-items">
             <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-card">
-              <div class="qa-head">
-                <span class="qa-num">Q{{i+1}}</span>
+              <div class="qa-top">
+                <span class="qa-label">Q{{i+1}}</span>
                 <button @click="selChar.sections.selfIntro.splice(i,1)" class="qa-del">×</button>
               </div>
-              <input v-model="qa.q" placeholder="質問" class="qa-q">
+              <input v-model="qa.q" placeholder="質問">
               <textarea v-model="qa.a" rows="2" placeholder="回答"></textarea>
               <input v-model="qa.source" placeholder="出处" class="qa-src">
             </div>
           </div>
-          <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" class="btn-add">＋ Q&A追加</button>
+          <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" class="btn-small">＋ 追加</button>
         </section>
 
         <!-- 他人评价 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>他人評価</h3>
-          </div>
-          <div class="bubble-list">
-            <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="bubble">
-              <div class="bubble-tail"></div>
-              <input v-model="c.author" placeholder="評価者" class="bubble-author">
+        <section class="data-box">
+          <div class="box-title">◆ 他人評価</div>
+          <div class="comment-items">
+            <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-bubble">
+              <div class="bubble-point"></div>
+              <input v-model="c.author" placeholder="評価者">
               <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
-              <input v-model="c.source" placeholder="出处" class="bubble-src">
-              <button @click="selChar.sections.othersComments.splice(i,1)" class="bubble-del">×</button>
+              <input v-model="c.source" placeholder="出处" class="comment-src">
+              <button @click="selChar.sections.othersComments.splice(i,1)" class="comment-del">×</button>
             </div>
           </div>
-          <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" class="btn-add">＋ 評価追加</button>
+          <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" class="btn-small">＋ 追加</button>
         </section>
 
-        <!-- 奇闻趣事 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>エピソード・逸話</h3>
-          </div>
+        <!-- 逸话 -->
+        <section class="data-box">
+          <div class="box-title">◆ エピソード・逸話</div>
           <textarea v-model="selChar.sections.anecdotes" rows="6" placeholder="有趣的小故事、经典场景..."></textarea>
         </section>
 
-        <!-- 随身物品 -->
-        <section class="info-section">
-          <div class="section-header">
-            <span class="section-icon">◆</span>
-            <h3>持ち物チェック</h3>
-          </div>
-          <div class="item-grid">
-            <div v-for="(item, i) in selChar.itemsCheck" :key="i" class="item-card">
+        <!-- 物品 -->
+        <section class="data-box">
+          <div class="box-title">◆ 持ち物チェック</div>
+          <div class="item-list">
+            <div v-for="(item, i) in selChar.itemsCheck" :key="i" class="item-row">
               <input v-model="item.name" placeholder="物品名" class="item-name">
               <input v-model="item.desc" placeholder="説明" class="item-desc">
               <button @click="selChar.itemsCheck.splice(i,1)" class="item-del">×</button>
             </div>
           </div>
-          <button @click="selChar.itemsCheck.push({name:'',desc:''})" class="btn-add">＋ 物品追加</button>
+          <button @click="selChar.itemsCheck.push({name:'',desc:''})" class="btn-small">＋ 追加</button>
         </section>
       </div>
     </div>
   </div>
-
-  <!-- ====== 底部导航 ====== -->
-  <nav class="bottom-nav">
-    <button @click="nav='schools';selSchool=null;selChar=null" :class="nav==='schools'?'active':''">
-      <span class="bnav-icon">🏫</span>
-      <span class="bnav-text">学校</span>
-    </button>
-    <button @click="nav='chars';selSchool=null;selChar=null" :class="nav==='chars'?'active':''">
-      <span class="bnav-icon">🎾</span>
-      <span class="bnav-text">選手</span>
-    </button>
-    <button @click="selChar=null;selSchool=null;nav='schools'">
-      <span class="bnav-icon">☰</span>
-      <span class="bnav-text">リスト</span>
-    </button>
-  </nav>
 
   <!-- 图片预览 -->
   <div v-if="mapPreview" class="map-overlay" @click="mapPreview=null">
