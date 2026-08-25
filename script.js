@@ -92,9 +92,9 @@ createApp({
     const selSchool=ref(null);
     const selChar=ref(null);
 
-    // 默认选中第一个学校
+    // 默认选中立海大
     if(schools.value.length && !selSchool.value){
-      selSchool.value = schools.value[2]; // 立海大
+      selSchool.value = schools.value.find(s => s.id === 'rikkai') || schools.value[0];
     }
 
     if(!chars.value.length){
@@ -204,7 +204,7 @@ createApp({
       localStorage.setItem('t_c',JSON.stringify(chars.value));
       const toast=document.createElement('div');
       toast.textContent='保存しました';
-      toast.style.cssText='position:fixed;top:20px;right:20px;background:#000;color:#fff;padding:12px 24px;font-size:12px;font-weight:900;z-index:9999;border:4px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,0.2);animation:fadeIn 0.2s;';
+      toast.style.cssText='position:fixed;top:20px;right:20px;background:#000;color:#fff;padding:12px 24px;font-size:12px;font-weight:900;z-index:9999;border:4px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,0.2);';
       document.body.appendChild(toast);
       setTimeout(()=>{
         toast.style.opacity='0';
