@@ -90,11 +90,22 @@ button:active{
   box-shadow:none;
 }
 .mbtn-b{background:#000;color:#fff;box-shadow:4px 4px 0 #444;}
+.top-nav{
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+  border-bottom:5px solid #000;
+  padding-bottom:12px;
+}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 @media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
 .asym-grid{display:grid;grid-template-columns:2.2fr 1fr;gap:14px;}
 @media(max-width:700px){.asym-grid{grid-template-columns:1fr;}}
+.data-panel{border-left:4px solid #000;padding-left:14px;}
+.data-label{font-weight:900;font-size:13px;background:#000;color:#fff;padding:2px 10px;display:inline-block;}
+.data-count{font-size:12px;margin-top:8px;}
 
 .nav{
   position:fixed;bottom:0;left:0;right:0;
@@ -123,7 +134,12 @@ button:active{
   transition:0.05s;
 }
 .school-item.sel{background:#000;color:#fff;}
-.school-item.sel .sub{color:#ccc;}
+.school-item.sel .badge{background:#fff;color:#000;border:2px solid #fff;}
+.school-name-row{display:flex;justify-content:space-between;font-weight:bold;font-size:16px;align-items:center;}
+.badge{font-size:11px;background:#000;color:#fff;padding:0 8px;border:2px solid #000;}
+.count{font-size:11px;opacity:0.7;}
+.captain{font-size:12px;margin-top:3px;opacity:0.8;}
+.count-badge{font-size:11px;background:#fff;color:#000;padding:0 8px;border:2px solid #000;margin-left:8px;}
 
 .char-card{
   border:4px solid #000;
@@ -144,6 +160,44 @@ button:active{
   font-size:24px;
   border:4px solid #000;
 }
+.char-name{font-size:13px;font-weight:bold;margin-top:4px;}
+
+.char-list-item{
+  padding:10px;
+  border:4px solid #000;
+  margin:5px 0;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:#fffdf9;
+}
+.char-avatar-sm{
+  width:48px;height:48px;
+  background:#d9d4cc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:20px;
+  border:3px solid #000;
+}
+
+.detail-page{padding-bottom:70px;}
+.back-btn{margin-bottom:12px;}
+.char-header{display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;}
+.char-avatar-lg{
+  width:80px;height:80px;
+  background:#d9d4cc;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:30px;
+  border:4px solid #000;
+}
+.school-name{font-size:14px;color:#333;margin-top:4px;}
 
 .profile-row{
   display:flex;
@@ -162,17 +216,22 @@ button:active{
   border:2px solid #000;
   font-size:12px;
 }
+.multi-version{flex:1;}
 .multi-version-item{
   display:flex;
   gap:6px;
   margin:4px 0;
   align-items:center;
 }
+.ver-input{width:80px;}
+.add-ver-btn{font-size:11px;margin-top:2px;}
+
 .schedule-row{
   display:flex;gap:6px;margin:4px 0;align-items:center;
 }
-.schedule-row input.time{width:70px;text-align:center;border-width:3px;}
-.schedule-row input.event{flex:1;border-width:3px;}
+.schedule-row .time{width:70px;text-align:center;}
+.schedule-row .event{flex:1;}
+.add-btn{font-size:11px;margin-top:4px;}
 
 .oneword-box{
   background:#000;color:#fff;
@@ -193,7 +252,7 @@ button:active{
 }
 .oneword-input::placeholder{color:#aaa;}
 .oneword-by{text-align:right;font-size:12px;margin-top:6px;color:#ccc;}
-.oneword-by input{color:#ccc;}
+.oneword-author{background:transparent;border:none;border-bottom:3px solid #ccc;color:#ccc;width:120px;font-size:12px;}
 
 .interview-qa{
   margin:12px 0;padding:14px;
@@ -203,6 +262,8 @@ button:active{
 .interview-qa .q{font-weight:900;color:#000;font-size:14px;margin-bottom:4px;}
 .interview-qa .a{color:#1a1a1a;margin-bottom:4px;line-height:1.7;}
 .interview-qa .source{text-align:right;font-size:10px;color:#333;border-top:2px solid #aaa;padding-top:4px;margin-top:4px;}
+.qa-q-input{width:calc(100% - 40px);border:none;border-bottom:3px solid #000;background:transparent;font-weight:bold;}
+.source-input{font-size:11px;color:#333;border-width:3px;margin-top:3px;}
 
 .personality-section{
   margin:10px 0;padding:12px;
@@ -220,9 +281,11 @@ button:active{
   margin:6px 0;padding:12px;
   background:#f6f2ec;border:4px solid #000;position:relative;
 }
-.comment-box .author{font-weight:900;font-size:13px;color:#000;}
-.comment-box .source{font-size:10px;color:#333;text-align:right;border-top:2px solid #aaa;padding-top:4px;margin-top:4px;}
-
+.comment-box .comment-name{font-weight:bold;width:160px;border-width:3px;}
+.del-btn{
+  position:absolute;top:4px;right:4px;
+  padding:2px 10px;font-size:10px;
+}
 .qa-box{margin:10px 0;padding:12px;border:4px solid #000;background:#fffdf9;}
 .qa-q{font-weight:900;color:#000;font-size:15px;margin-bottom:4px;border-left:4px solid #000;padding-left:8px;}
 .qa-a{color:#1a1a1a;margin-top:6px;padding-left:8px;border-left:2px solid #888;}
@@ -232,6 +295,9 @@ button:active{
   border:4px solid #000;background:#f5f1ea;
 }
 .map-area .map-label{font-weight:900;font-size:14px;display:block;margin-bottom:8px;}
+.map-row{display:flex;gap:14px;flex-wrap:wrap;}
+.map-row>div{flex:1;min-width:140px;}
+.map-row label{font-size:12px;font-weight:bold;display:block;margin:4px 0;}
 .map-thumb{
   max-width:100%;
   max-height:160px;
@@ -242,6 +308,7 @@ button:active{
   display:block;
 }
 .map-thumb:hover{opacity:0.85;}
+.map-hint{font-size:11px;color:#333;margin-top:6px;border-top:2px solid #000;padding-top:4px;}
 .map-overlay{
   position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.85);
@@ -263,6 +330,10 @@ button:active{
   background:#000;padding:4px 16px;border:3px solid #fff;
 }
 .school-event{display:flex;gap:6px;margin:4px 0;align-items:center;}
-.school-event input.month{width:60px;text-align:center;border-width:3px;}
-.school-event input.event{flex:1;border-width:3px;}
+.school-event .month{width:60px;text-align:center;}
+.school-event .event{flex:1;}
+.add-char-btn{margin-top:14px;}
+.item-row{display:flex;gap:6px;margin:4px 0;align-items:center;}
+.item-name{flex:1;}
+.item-desc{flex:2;}
 [v-cloak]{display:none!important}
