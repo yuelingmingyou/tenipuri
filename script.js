@@ -1,10 +1,12 @@
+// script.js
 if(typeof Vue==='undefined'){
-  document.body.innerHTML='<div style="color:#c00;padding:20px;text-align:center;">⚠️ Vue.js 読み込み失敗</div>';
+  document.body.innerHTML='<div style="color:#c00;padding:40px;text-align:center;font-family:monospace;">⚠️ Vue.js 読み込み失敗<br>ページを更新してください</div>';
   throw new Error('Vue not loaded');
 }
 
 const {createApp,ref,watch}=Vue;
 
+// 字段定义
 const singleVersionFields = [
   'class','birthday','birthTime','zodiac','bloodType',
   'footSize','eyesight','dominantHand',
@@ -38,6 +40,17 @@ const baseProfileLabels = {
   gift:'大切な人へのプレゼント'
 };
 
+// 学校配色映射
+const schoolColorMap = {
+  'seigaku':'#1a4d8f',
+  'hyotei':'#4a5568',
+  'rikkai':'#b7791f',
+  'st-rudolph':'#c53030',
+  'rokaku':'#dd6b20',
+  'yamabuki':'#48bb78',
+  'shitenhoji':'#2b6cb0'
+};
+
 const createBaseProfile = () => {
   const profile = {};
   singleVersionFields.forEach(k => profile[k] = '');
@@ -56,8 +69,9 @@ createApp({
     const nav=ref('schools');
     const mapPreview=ref(null);
 
+    // 学校数据
     const schools=ref(JSON.parse(localStorage.getItem('t_s')||'null')||[
-      {id:'seigaku',name:'青春学園',captain:'手塚国光',motto:'質実剛健',schoolColor:'青/白',description:'東京都の伝統校。',events:[
+      {id:'seigaku',name:'青春学園',captain:'手塚国光',motto:'質実剛健',schoolColor:'青/白',description:'東京都の伝統校。テニス部は全国常連。',events:[
         {month:'4月',name:'入学式'},{month:'4月',name:'始業式'},{month:'4月',name:'新入生歓迎会'},
         {month:'5月',name:'遠足'},{month:'5月',name:'中間考査'},
         {month:'6月',name:'交流会'},
@@ -69,18 +83,19 @@ createApp({
         {month:'2月',name:'期末考査'},
         {month:'3月',name:'卒業式'},{month:'3月',name:'終業式'}
       ]},
-      {id:'hyotei',name:'氷帝学園',captain:'跡部景吾',motto:'勝てば官軍',schoolColor:'灰/紺',description:'名門私立。',events:[]},
-      {id:'rikkai',name:'立海大附属',captain:'幸村精市',motto:'常勝立海',schoolColor:'黄/黒',description:'王者立海大。',events:[]},
-      {id:'st-rudolph',name:'聖ルドルフ学院',captain:'観月はじめ',motto:'',schoolColor:'白/赤',description:'データテニス。',events:[]},
-      {id:'rokaku',name:'六角中学校',captain:'佐伯虎次郎',motto:'',schoolColor:'橙/黒',description:'海辺の学校。',events:[]},
+      {id:'hyotei',name:'氷帝学園',captain:'跡部景吾',motto:'勝てば官軍',schoolColor:'灰/紺',description:'名門私立。200名以上のテニス部員。',events:[]},
+      {id:'rikkai',name:'立海大附属',captain:'幸村精市',motto:'常勝立海',schoolColor:'黄/黒',description:'王者立海大。全国大会連覇中。',events:[]},
+      {id:'st-rudolph',name:'聖ルドルフ学院',captain:'観月はじめ',motto:'',schoolColor:'白/赤',description:'データテニスの名門。',events:[]},
+      {id:'rokaku',name:'六角中学校',captain:'佐伯虎次郎',motto:'',schoolColor:'橙/黒',description:'海辺の学校。お好み焼きが有名。',events:[]},
       {id:'yamabuki',name:'山吹中学校',captain:'南健太郎',motto:'',schoolColor:'黄/緑',description:'ダブルスが強い。',events:[]},
-      {id:'shitenhoji',name:'四天宝寺',captain:'白石蔵ノ介',motto:'',schoolColor:'紺/白',description:'大阪の強豪。',events:[]}
+      {id:'shitenhoji',name:'四天宝寺',captain:'白石蔵ノ介',motto:'',schoolColor:'紺/白',description:'大阪の強豪。お笑いテニス。',events:[]}
     ]);
 
     const chars=ref(JSON.parse(localStorage.getItem('t_c')||'[]'));
     const selSchool=ref(null);
     const selChar=ref(null);
 
+    // 初始化示例数据
     if(!chars.value.length){
       chars.value.push({
         id:'r1',schoolId:'rikkai',name:'仁王雅治',
@@ -119,19 +134,31 @@ createApp({
           {name:'柳生比吕士',desc:'配合仁王君的欺诈真是让我做不情愿的事情。'},
           {name:'丸井文太',desc:'仁王的惊吓口香糖无论多少次都会吓到我！'}
         ],
-        dayRoutine:{school:[{time:'',event:''}],holiday:[{time:'',event:''}]},
-        sections:{personality:'',othersComments:[],anecdotes:'',selfIntro:[]},
+        dayRoutine:{school:[{time:'7:00',event:'起床・朝練'},{time:'8:30',event:'登校'},{time:'15:30',event:'部活'},{time:'22:00',event:'就寝'}],holiday:[{time:'9:00',event:'自主練'},{time:'14:00',event:'ゲーム'}]},
+        sections:{personality:'',othersComments:[
+          {author:'幸村精市',text:'仁王は頼もしい副部長だ。',source:'POT公式書20.5'},
+          {author:'柳生比吕士',text:'あいつの変装は本物だ。',source:'pair puri vol.4'}
+        ],anecdotes:'入学当初は欺诈で先輩を驚かせ、部活をサボろうとした。',selfIntro:[
+          {q:'テニスを始めたきっかけは？',a:'面白そうだったから。',source:'40.5'}
+        ]},
         interviewQA:[
-          {q:'请说一下仁王名字的由来',a:'因为网球俱乐部有人叫这个，所以借用了。',source:'pair puri vol.4'}
+          {q:'请说一下仁王名字的由来',a:'因为网球俱乐部有人叫这个，所以借用了。',source:'pair puri vol.4'},
+          {q:'幻影のコツは？',a:'相手を観察することかな。',source:'NPO23.5'}
         ],
-        itemsCheck:[]
+        itemsCheck:[
+          {name:'デッキブラシ',desc:'部活後の掃除用'},
+          {name:'変装道具',desc:'いつでも変装できるように'}
+        ]
       });
     }
 
+    // 数据迁移与初始化
     chars.value.forEach(c=>{
       if(!c.baseProfile) c.baseProfile = createBaseProfile();
       singleVersionFields.forEach(k=>{ if(!(k in c.baseProfile)) c.baseProfile[k] = ''; });
-      multiVersionFields.forEach(k=>{ if(!(k in c.baseProfile) || !Array.isArray(c.baseProfile[k])) c.baseProfile[k] = [{content:'',version:''}]; });
+      multiVersionFields.forEach(k=>{ 
+        if(!(k in c.baseProfile) || !Array.isArray(c.baseProfile[k])) c.baseProfile[k] = [{content:'',version:''}]; 
+      });
       if(!c.oneWord) c.oneWord = {text:'',by:''};
       if(!c.personalitySections) c.personalitySections = createPersonalitySections();
       if(!c.classmates) c.classmates = [];
@@ -144,6 +171,16 @@ createApp({
 
     const getChars=(sid)=>chars.value.filter(c=>c.schoolId===sid);
     const getSchoolName=(sid)=>(schools.value.find(s=>s.id===sid)||{}).name||'';
+
+    // 获取选手简介
+    const getProfileBrief=(c)=>{
+      const bp=c.baseProfile;
+      if(!bp) return '';
+      const parts=[];
+      if(bp.class) parts.push(bp.class);
+      if(bp.playStyle) parts.push(bp.playStyle);
+      return parts.join(' · ') || 'NO DATA';
+    };
 
     const addChar=(sid)=>{
       const n=prompt('新しい選手の名前を入力してください：');
@@ -165,9 +202,15 @@ createApp({
     const save=()=>{
       localStorage.setItem('t_s',JSON.stringify(schools.value));
       localStorage.setItem('t_c',JSON.stringify(chars.value));
-      alert('保存しました！');
+      // 使用更低调的保存提示
+      const toast=document.createElement('div');
+      toast.textContent='保存しました';
+      toast.style.cssText='position:fixed;top:20px;right:20px;background:#000;color:#fff;padding:12px 24px;font-size:12px;font-weight:900;z-index:9999;border:4px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,0.2);';
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.remove(),1500);
     };
 
+    // 自动保存
     watch([schools,chars],()=>{
       localStorage.setItem('t_s',JSON.stringify(schools.value));
       localStorage.setItem('t_c',JSON.stringify(chars.value));
@@ -191,8 +234,10 @@ createApp({
     return{
       nav, schools, chars, selSchool, selChar,
       baseProfileLabels, singleVersionFields, multiVersionFields,
-      getChars, getSchoolName, addChar, save,
+      schoolColorMap,
+      getChars, getSchoolName, getProfileBrief, addChar, save,
       handleMapUpload, openMapPreview, mapPreview
     };
   }
 }).mount('#app');
+
