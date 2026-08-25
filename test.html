@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テニプリDB · 漫畫公式書</title>
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
+  <style>
+    /* 样式在第二部分 */
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!-- 顶部导航 -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;border-bottom:5px solid #000;padding-bottom:12px;">
+    <button @click="nav='schools'" :class="nav==='schools'?'mbtn-b':''">🏫 学校</button>
+    <button @click="nav='chars'" :class="nav==='chars'?'mbtn-b':''">🎾 選手</button>
+    <button @click="save" style="margin-left:auto">💾 保存</button>
+  </div>
+
+  <!-- ====== 学校页面 ====== -->
+  <div v-if="nav==='schools'">
+    <div class="box">
+      <h2>学校リスト（{{schools.length}}校）</h2>
+      <div v-for="s in schools" :key="s.id" 
+           @click="selSchool=s" 
+           class="school-item" 
+           :class="selSchool?.id===s.id?'sel':''">
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px;">
+          <span>{{s.name}}</span>
+          <span style="font-size:12px;background:#fff;color:#000;padding:0 8px;border:2px solid #000;" v-if="selSchool?.id===s.id">選択中</span>
+          <span style="font-size:11px;opacity:0.7;">{{getChars(s.id).length}}人</span>
+        </div>
+        <div v-if="s.captain" style="font-size:12px;margin-top:3px;opacity:0.8;">部長: {{s.captain}}</div>
+      </div>
+    </div>
+
+    <!-- 学校详情 + 地图上传 -->
+    <div v-if="selSchool" class="box">
+      <h2>{{selSchool.name}}</h2>
+      <div class="asym-grid">
+        <div>
+          <input v-model="selSchool.captain" placeholder="部長">
+          <input v-model="selSchool.motto" placeholder="校訓">
+          <input v-model="selSchool.schoolColor" placeholder="代表色">
+          <textarea v-model="selSchool.description" rows="3" placeholder="概要"></textarea>
+        </div>
+        <div style="border-left:4px solid #000;padding-left:14px;">
+          <div style="font-weight:900;font-size:13px;background:#000;color:#fff;padding:2px 10px;display:inline-block;">DATA</div>
+          <div style="font-size:12px;margin-top:8px;">選手数: {{getChars(selSchool.id).length}}人</div>
+        </div>
+      </div>
+
+      <!-- 地图上传 -->
+      <div class="map-area">
+        <span class="map-label">🗺️ 学校地图 · 周边地图</span>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:12px;font-weight:bold;display:block;margin:4px 0;">学校地图</label>
+            <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'schoolMap')">
+            <img v-if="selSchool.schoolMap" :src="selSchool.schoolMap" class="map-thumb" @click="openMapPreview(selSchool.schoolMap)">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:12px;font-weight:bold;display:block;margin:4px 0;">周边地图</label>
+            <input type="file" accept="image/*" @change="handleMapUpload($event, selSchool, 'areaMap')">
+            <img v-if="selSchool.areaMap" :src="selSchool.areaMap" class="map-thumb" @click="openMapPreview(selSchool.areaMap)">
+          </div>
+        </div>
+        <div style="font-size:11px;color:#333;margin-top:6px;border-top:2px solid #000;padding-top:4px;">※ クリックで拡大表示</div>
+      </div>
+
+      <!-- 年间活动 -->
+      <h3>年間行事予定</h3>
+      <div v-for="(e, i) in selSchool.events" :key="i" class="school-event">
+        <input v-model="e.month" class="month" placeholder="4月">
+        <input v-model="e.name" class="event" placeholder="入学式">
+        <button @click="selSchool.events.splice(i,1)" style="padding:2px 10px;">×</button>
+      </div>
+      <button @click="selSchool.events.push({month:'',name:''})" style="font-size:11px;margin-top:4px;">+ 行事追加</button>
+      
+      <button @click="addChar(selSchool.id)" style="margin-top:14px;">+ 選手追加</button>
+      <div class="grid-3" style="margin-top:12px;">
+        <div v-for="c in getChars(selSchool.id)" :key="c.id" @click="selChar=c;nav='chars'" class="char-card">
+          <div class="char-avatar">{{c.name[0]}}</div>
+          <div style="font-size:13px;font-weight:bold;margin-top:4px;">{{c.name}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 选手列表 ====== -->
+  <div v-if="nav==='chars' && !selChar">
+    <div v-for="s in schools" :key="s.id" class="box">
+      <h2>{{s.name}} <span style="font-size:11px;background:#fff;color:#000;padding:0 8px;border:2px solid #000;margin-left:8px;">{{getChars(s.id).length}}</span></h2>
+      <div v-for="c in getChars(s.id)" :key="c.id" @click="selChar=c" style="padding:10px;border:4px solid #000;margin:5px 0;cursor:pointer;display:flex;align-items:center;gap:14px;background:#fffdf9;">
+        <div style="width:48px;height:48px;background:#d9d4cc;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;border:3px solid #000;">{{c.name[0]}}</div>
+        <span style="font-weight:bold;font-size:16px;">{{c.name}}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 选手详细编辑 ====== -->
+  <div v-if="nav==='chars' && selChar" style="padding-bottom:70px;">
+    <button @click="selChar=null" style="margin-bottom:12px;">← 戻る</button>
+
+    <!-- 基础信息 -->
+    <div class="box">
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;">
+        <div style="width:80px;height:80px;background:#d9d4cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:30px;border:4px solid #000;">{{selChar.name[0]}}</div>
+        <div>
+          <h2 style="margin:0;">{{selChar.name}}</h2>
+          <div style="font-size:14px;color:#333;margin-top:4px;">{{getSchoolName(selChar.schoolId)}}</div>
+        </div>
+      </div>
+
+      <div v-for="(label, key) in baseProfileLabels" :key="key" class="profile-row">
+        <span class="label">{{label}}</span>
+        <div v-if="multiVersionFields.includes(key)" style="flex:1;">
+          <div v-for="(item, idx) in selChar.baseProfile[key]" :key="idx" class="multi-version-item">
+            <input v-model="item.content" placeholder="内容" style="flex:1;border-width:3px;">
+            <input v-model="item.version" placeholder="ver" style="width:80px;border-width:3px;">
+            <button @click="selChar.baseProfile[key].splice(idx,1)" style="padding:2px 10px;">×</button>
+          </div>
+          <button @click="selChar.baseProfile[key].push({content:'',version:''})" style="font-size:11px;margin-top:2px;">+ 版本追加</button>
+        </div>
+        <input v-else v-model="selChar.baseProfile[key]" :placeholder="label" style="flex:1;border-width:3px;">
+      </div>
+    </div>
+
+    <!-- 一句话评价 -->
+    <div class="box">
+      <h2>一句话评价</h2>
+      <div class="oneword-box">
+        <input v-model="selChar.oneWord.text" class="oneword-input" placeholder="输入一句话评价...">
+        <div class="oneword-by">—— <input v-model="selChar.oneWord.by" placeholder="评价者" style="background:transparent;border:none;border-bottom:3px solid #ccc;color:#ccc;width:120px;font-size:12px;"></div>
+      </div>
+    </div>
+
+    <!-- 性格分析 -->
+    <div class="box">
+      <h2>性格分析</h2>
+      <div v-for="(sec, idx) in selChar.personalitySections" :key="idx" class="personality-section">
+        <h5>
+          <input v-model="sec.title" placeholder="section标题">
+          <button @click="selChar.personalitySections.splice(idx,1)" style="padding:2px 10px;font-size:10px;">×</button>
+        </h5>
+        <textarea v-model="sec.content" rows="3" placeholder="内容..."></textarea>
+      </div>
+      <button @click="selChar.personalitySections.push({title:'',content:''})" style="font-size:11px;margin-top:4px;">+ 追加section</button>
+    </div>
+
+    <!-- 同学相处 -->
+    <div class="box">
+      <h2>与同学的相处方式</h2>
+      <div v-for="(rel, i) in selChar.classmates" :key="i" class="comment-box">
+        <button @click="selChar.classmates.splice(i,1)" style="position:absolute;top:4px;right:4px;padding:2px 10px;font-size:10px;">×</button>
+        <input v-model="rel.name" placeholder="同学名字" style="font-weight:bold;width:160px;border-width:3px;">
+        <textarea v-model="rel.desc" rows="2" placeholder="相处方式描述..."></textarea>
+      </div>
+      <button @click="selChar.classmates.push({name:'',desc:''})" style="margin-top:6px;">+ 追加</button>
+    </div>
+
+    <!-- 一日行程 -->
+    <div class="box">
+      <h2>一日のスケジュール</h2>
+      <h4>【登校日】</h4>
+      <div v-for="(item, i) in selChar.dayRoutine.school" :key="i" class="schedule-row">
+        <input v-model="item.time" class="time" placeholder="7:00">
+        <input v-model="item.event" class="event" placeholder="起床・朝練">
+        <button @click="selChar.dayRoutine.school.splice(i,1)" style="padding:2px 10px;">×</button>
+      </div>
+      <button @click="selChar.dayRoutine.school.push({time:'',event:''})" style="font-size:11px;margin-top:4px;">+ 追加</button>
+      <h4 style="margin-top:12px;">【休日】</h4>
+      <div v-for="(item, i) in selChar.dayRoutine.holiday" :key="i" class="schedule-row">
+        <input v-model="item.time" class="time" placeholder="9:00">
+        <input v-model="item.event" class="event" placeholder="自主練">
+        <button @click="selChar.dayRoutine.holiday.splice(i,1)" style="padding:2px 10px;">×</button>
+      </div>
+      <button @click="selChar.dayRoutine.holiday.push({time:'',event:''})" style="font-size:11px;margin-top:4px;">+ 追加</button>
+    </div>
+
+    <!-- 访谈Q&A -->
+    <div class="box">
+      <h2>访谈Q&A</h2>
+      <div v-for="(qa, i) in selChar.interviewQA" :key="i" class="interview-qa">
+        <button @click="selChar.interviewQA.splice(i,1)" style="float:right;padding:2px 12px;font-size:10px;">×</button>
+        <div class="q">Q: <input v-model="qa.q" placeholder="问题" style="width:calc(100% - 40px);border:none;border-bottom:3px solid #000;background:transparent;font-weight:bold;"></div>
+        <div class="a">A: <textarea v-model="qa.a" rows="3" placeholder="回答" style="width:100%;margin-top:6px;border-width:3px;"></textarea></div>
+        <div class="source">出处: <input v-model="qa.source" placeholder="例：pair puri vol.4" style="width:200px;font-size:11px;border:none;border-bottom:2px solid #000;background:transparent;"></div>
+      </div>
+      <button @click="selChar.interviewQA.push({q:'',a:'',source:''})" style="margin-top:6px;">+ 访谈追加</button>
+    </div>
+
+    <!-- 本人自述 -->
+    <div class="box">
+      <h2>本人のコメント Q&A</h2>
+      <div v-for="(qa, i) in selChar.sections.selfIntro" :key="i" class="qa-box">
+        <button @click="selChar.sections.selfIntro.splice(i,1)" style="float:right;padding:2px 10px;font-size:10px;">×</button>
+        <div class="qa-q">Q: <input v-model="qa.q" placeholder="質問" style="width:calc(100% - 30px);border:none;border-bottom:3px solid #000;background:transparent;"></div>
+        <div class="qa-a">A: <textarea v-model="qa.a" rows="2" placeholder="回答" style="width:100%;margin-top:6px;border-width:3px;"></textarea></div>
+        <input v-model="qa.source" placeholder="出处" style="font-size:11px;color:#333;margin-top:5px;border-width:3px;">
+      </div>
+      <button @click="selChar.sections.selfIntro.push({q:'',a:'',source:''})" style="margin-top:6px;">+ Q&A追加</button>
+    </div>
+
+    <!-- 他人评价 -->
+    <div class="box">
+      <h2>他人評価</h2>
+      <div v-for="(c, i) in selChar.sections.othersComments" :key="i" class="comment-box">
+        <button @click="selChar.sections.othersComments.splice(i,1)" style="position:absolute;top:4px;right:4px;padding:2px 10px;font-size:10px;">×</button>
+        <input v-model="c.author" placeholder="評価者" style="font-weight:bold;width:160px;border-width:3px;">
+        <textarea v-model="c.text" rows="2" placeholder="コメント..."></textarea>
+        <input v-model="c.source" placeholder="出处（例：POT公式書20.5）" style="font-size:11px;color:#333;border-width:3px;margin-top:3px;">
+      </div>
+      <button @click="selChar.sections.othersComments.push({author:'',text:'',source:''})" style="margin-top:6px;">+ 評価追加</button>
+    </div>
+
+    <!-- 奇闻趣事 -->
+    <div class="box">
+      <h2>エピソード・逸話</h2>
+      <textarea v-model="selChar.sections.anecdotes" rows="4" placeholder="有趣的小故事、经典场景..."></textarea>
+    </div>
+
+    <!-- 随身物品 -->
+    <div class="box">
+      <h2>持ち物チェック</h2>
+      <div v-for="(item, i) in selChar.itemsCheck" :key="i" style="display:flex;gap:6px;margin:4px 0;align-items:center;">
+        <input v-model="item.name" placeholder="物品名" style="flex:1;border-width:3px;">
+        <input v-model="item.desc" placeholder="説明" style="flex:2;border-width:3px;">
+        <button @click="selChar.itemsCheck.splice(i,1)" style="padding:2px 10px;">×</button>
+      </div>
+      <button @click="selChar.itemsCheck.push({name:'',desc:''})" style="margin-top:6px;">+ 物品追加</button>
+    </div>
+  </div>
+
+  <!-- ====== 底部导航 ====== -->
+  <div class="nav">
+    <button @click="nav='schools';selSchool=null" :class="nav==='schools'?'on':''"><span class="ic">🏫</span>学校</button>
+    <button @click="nav='chars';selChar=null" :class="nav==='chars'?'on':''"><span class="ic">🎾</span>選手</button>
+    <button @click="selChar=null;selSchool=null"><span class="ic">☰</span>リスト</button>
+  </div>
+
+  <!-- 图片放大预览浮层 -->
+  <div v-if="mapPreview" class="map-overlay" @click="mapPreview=null">
+    <div class="close-hint">✕</div>
+    <img :src="mapPreview" @click.stop>
+  </div>
+</div>
+<!-- 脚本在第三部分 -->
+</body>
+</html>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Noto Sans JP","Hiragino Sans GB",sans-serif;
+  background:#e8e4de;
+  padding:12px;
+  padding-bottom:80px;
+  color:#1a1a1a;
+  background-image: radial-gradient(circle at 20% 30%, rgba(0,0,0,0.03) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 70%, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 12px 12px, 18px 18px;
+}
+.box{
+  background:#faf8f4;
+  border:4px solid #000;
+  padding:14px 16px;
+  margin-bottom:16px;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.15);
+  position:relative;
+  background-image: radial-gradient(circle at 10% 80%, rgba(0,0,0,0.02) 2px, transparent 2px);
+  background-size: 8px 8px;
+}
+.box::after{
+  content:'';
+  position:absolute;
+  bottom:-6px;
+  right:-6px;
+  width:12px;
+  height:12px;
+  background:#000;
+  z-index:-1;
+}
+h2{
+  background:#000;
+  color:#fff;
+  padding:3px 16px 3px 12px;
+  display:inline-block;
+  font-size:16px;
+  letter-spacing:1px;
+  font-weight:900;
+  border-radius:0;
+  margin-bottom:14px;
+  box-shadow: 4px 4px 0 #333;
+}
+h3{
+  font-size:14px;
+  font-weight:900;
+  border-left:6px solid #000;
+  padding-left:10px;
+  margin:16px 0 10px;
+  background:rgba(0,0,0,0.04);
+  padding:4px 10px;
+}
+h4{
+  font-size:12px;
+  font-weight:900;
+  color:#000;
+  margin:12px 0 6px;
+  border-bottom:3px solid #000;
+  padding-bottom:3px;
+  display:inline-block;
+}
+input,textarea,select{
+  width:100%;
+  border:3px solid #000;
+  padding:6px 10px;
+  margin:4px 0;
+  font-size:13px;
+  font-family:inherit;
+  background:#fffdf9;
+  border-radius:0;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  background:#fcf8f0;
+  box-shadow:4px 4px 0 #000;
+}
+button{
+  background:#fff;
+  border:3px solid #000;
+  padding:5px 16px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:4px 4px 0 #000;
+  font-size:12px;
+  border-radius:0;
+  transition:0.03s linear;
+}
+button:active{
+  transform:translate(3px,3px);
+  box-shadow:none;
+}
+.mbtn-b{background:#000;color:#fff;box-shadow:4px 4px 0 #444;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+.asym-grid{display:grid;grid-template-columns:2.2fr 1fr;gap:14px;}
+@media(max-width:700px){.asym-grid{grid-template-columns:1fr;}}
+
+.nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;
+  border-top:5px solid #000;
+  display:flex;
+  justify-content:space-around;
+  padding:8px 5px;
+  z-index:200;
+  background-image: radial-gradient(circle at 30% 40%, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.nav button{
+  background:none;border:none;box-shadow:none;
+  font-size:12px;text-align:center;font-weight:900;padding:4px 10px;
+}
+.nav button.on{background:#000;color:#fff;box-shadow:none;}
+.nav button .ic{font-size:1.6rem;display:block;}
+
+.school-item{
+  padding:12px 14px;
+  border:4px solid #000;
+  margin:6px 0;
+  cursor:pointer;
+  background:#fffcf7;
+  transition:0.05s;
+}
+.school-item.sel{background:#000;color:#fff;}
+.school-item.sel .sub{color:#ccc;}
+
+.char-card{
+  border:4px solid #000;
+  padding:10px 6px;
+  text-align:center;
+  background:#fffdf9;
+  cursor:pointer;
+  box-shadow:4px 4px 0 rgba(0,0,0,0.1);
+}
+.char-avatar{
+  width:60px;height:60px;
+  background:#d9d4cc;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:24px;
+  border:4px solid #000;
+}
+
+.profile-row{
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  margin:6px 0;
+  font-size:13px;
+  flex-wrap:wrap;
+}
+.profile-row .label{
+  font-weight:900;
+  min-width:88px;
+  flex-shrink:0;
+  padding:4px 6px;
+  background:#eae5dc;
+  border:2px solid #000;
+  font-size:12px;
+}
+.multi-version-item{
+  display:flex;
+  gap:6px;
+  margin:4px 0;
+  align-items:center;
+}
+.schedule-row{
+  display:flex;gap:6px;margin:4px 0;align-items:center;
+}
+.schedule-row input.time{width:70px;text-align:center;border-width:3px;}
+.schedule-row input.event{flex:1;border-width:3px;}
+
+.oneword-box{
+  background:#000;color:#fff;
+  padding:20px 24px;
+  margin:12px 0;
+  font-size:17px;
+  font-weight:900;
+  position:relative;
+  border:4px solid #000;
+  box-shadow:4px 4px 0 #444;
+}
+.oneword-box::before{content:'"';font-size:38px;position:absolute;top:0;left:12px;opacity:0.4;color:#aaa;}
+.oneword-box::after{content:'"';font-size:38px;position:absolute;bottom:0;right:12px;opacity:0.4;color:#aaa;}
+.oneword-input{
+  background:transparent;border:none;border-bottom:3px solid #fff;
+  color:#fff;padding:4px 8px;width:calc(100% - 20px);margin-left:12px;
+  font-weight:bold;
+}
+.oneword-input::placeholder{color:#aaa;}
+.oneword-by{text-align:right;font-size:12px;margin-top:6px;color:#ccc;}
+.oneword-by input{color:#ccc;}
+
+.interview-qa{
+  margin:12px 0;padding:14px;
+  border-left:8px solid #000;border:4px solid #000;
+  background:#fcfaf5;
+}
+.interview-qa .q{font-weight:900;color:#000;font-size:14px;margin-bottom:4px;}
+.interview-qa .a{color:#1a1a1a;margin-bottom:4px;line-height:1.7;}
+.interview-qa .source{text-align:right;font-size:10px;color:#333;border-top:2px solid #aaa;padding-top:4px;margin-top:4px;}
+
+.personality-section{
+  margin:10px 0;padding:12px;
+  border:4px dashed #222;background:#f8f4ee;
+}
+.personality-section h5{
+  font-size:13px;color:#000;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;font-weight:900;
+}
+.personality-section h5 input{
+  background:transparent;border:none;border-bottom:3px solid #000;
+  font-size:13px;color:#000;width:140px;padding:2px 4px;
+}
+.comment-box{
+  margin:6px 0;padding:12px;
+  background:#f6f2ec;border:4px solid #000;position:relative;
+}
+.comment-box .author{font-weight:900;font-size:13px;color:#000;}
+.comment-box .source{font-size:10px;color:#333;text-align:right;border-top:2px solid #aaa;padding-top:4px;margin-top:4px;}
+
+.qa-box{margin:10px 0;padding:12px;border:4px solid #000;background:#fffdf9;}
+.qa-q{font-weight:900;color:#000;font-size:15px;margin-bottom:4px;border-left:4px solid #000;padding-left:8px;}
+.qa-a{color:#1a1a1a;margin-top:6px;padding-left:8px;border-left:2px solid #888;}
+
+.map-area{
+  margin:12px 0;padding:14px;
+  border:4px solid #000;background:#f5f1ea;
+}
+.map-area .map-label{font-weight:900;font-size:14px;display:block;margin-bottom:8px;}
+.map-thumb{
+  max-width:100%;
+  max-height:160px;
+  border:4px solid #000;
+  margin:6px 0;
+  cursor:pointer;
+  transition:0.1s;
+  display:block;
+}
+.map-thumb:hover{opacity:0.85;}
+.map-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;
+  cursor:pointer;
+  padding:20px;
+}
+.map-overlay img{
+  max-width:95%;
+  max-height:95%;
+  border:8px solid #fff;
+  box-shadow:0 0 40px rgba(0,0,0,0.8);
+  background:#fff;
+}
+.map-overlay .close-hint{
+  position:absolute;top:20px;right:30px;
+  color:#fff;font-size:28px;font-weight:bold;
+  background:#000;padding:4px 16px;border:3px solid #fff;
+}
+.school-event{display:flex;gap:6px;margin:4px 0;align-items:center;}
+.school-event input.month{width:60px;text-align:center;border-width:3px;}
+.school-event input.event{flex:1;border-width:3px;}
+[v-cloak]{display:none!important}
+<script>
+if(typeof Vue==='undefined'){
+  document.body.innerHTML='<div style="color:#c00;padding:20px;text-align:center;">⚠️ Vue.js 読み込み失敗</div>';
+  throw new Error('Vue not loaded');
+}
+
+const {createApp,ref,watch}=Vue;
+
+// ---------- 字段定义 ----------
+const singleVersionFields = [
+  'class','birthday','birthTime','zodiac','bloodType',
+  'footSize','eyesight','dominantHand',
+  'family','fatherJob',
+  'elementary','committee','badSubject','schoolPlace','allowance','dailyRoutine'
+];
+const multiVersionFields = [
+  'height','weight','specialMoves','playStyle','racket','shoes',
+  'hobby','motto','color','favoriteFood','favoriteBook','favoriteMusic',
+  'type','dateSpot','wantNow','weakPoint',
+  'goodSubject','otherSkills','tournamentRoutine','favoriteDay','wantTravel','gift'
+];
+
+const baseProfileLabels = {
+  class:'クラス',birthday:'生年月日',birthTime:'出生時間',zodiac:'星座',
+  bloodType:'血液型',height:'身長',weight:'体重',
+  footSize:'足のサイズ',eyesight:'視力',dominantHand:'利き手',
+  specialMoves:'必殺技',playStyle:'プレースタイル',
+  racket:'ラケット',shoes:'シューズ',
+  family:'家族構成',fatherJob:'父の職業',
+  hobby:'趣味',motto:'座右の銘',color:'好きな色',
+  favoriteFood:'好物',favoriteBook:'好きな本',favoriteMusic:'好きな音楽',
+  type:'好みのタイプ',dateSpot:'デートしたい場所',
+  wantNow:'今欲しいもの',weakPoint:'苦手なもの',
+  elementary:'出身小学校',committee:'委員会',
+  goodSubject:'得意科目',badSubject:'苦手科目',
+  schoolPlace:'学校でよく行く場所',allowance:'お小遣いの使い道',
+  dailyRoutine:'毎日必ずすること',
+  otherSkills:'テニス以外の特技',tournamentRoutine:'大会中の日課',
+  favoriteDay:'好きな記念日',wantTravel:'行きたい旅行先',
+  gift:'大切な人へのプレゼント'
+};
+
+const createBaseProfile = () => {
+  const profile = {};
+  singleVersionFields.forEach(k => profile[k] = '');
+  multiVersionFields.forEach(k => profile[k] = [{content:'',version:''}]);
+  return profile;
+};
+
+const createPersonalitySections = () => [
+  {title:'星座&血型',content:''},
+  {title:'姓名相关',content:''},
+  {title:'兴趣爱好',content:''}
+];
+
+// ---------- App ----------
+createApp({
+  setup(){
+    const nav=ref('schools');
+    const mapPreview=ref(null);
+
+    const schools=ref(JSON.parse(localStorage.getItem('t_s')||'null')||[
+      {id:'seigaku',name:'青春学園',captain:'手塚国光',motto:'質実剛健',schoolColor:'青/白',description:'東京都の伝統校。チームワークと厳しい練習で全国を目指す。',events:[
+        {month:'4月',name:'入学式'},{month:'4月',name:'始業式'},{month:'4月',name:'新入生歓迎会'},{month:'4月',name:'開校記念日'},
+        {month:'5月',name:'遠足'},{month:'5月',name:'中間考査'},{month:'5月',name:'校内球技大会'},
+        {month:'6月',name:'交流会'},{month:'6月',name:'偏差値テスト'},{month:'6月',name:'地域交流対抗戦'},
+        {month:'7月',name:'期末考査'},{month:'7月',name:'オペラ鑑賞会'},{month:'7月',name:'校内水泳大会'},{month:'7月',name:'生徒総会'},{month:'7月',name:'終業式'},
+        {month:'9月',name:'始業式'},{month:'9月',name:'生徒会選挙'},{month:'9月',name:'社会科見学'},
+        {month:'10月',name:'中間考査'},{month:'10月',name:'運動会'},{month:'10月',name:'修学旅行'},{month:'10月',name:'文学フェア'},
+        {month:'11月',name:'文化祭'},{month:'11月',name:'弁論大会'},{month:'11月',name:'期末考査'},
+        {month:'1月',name:'始業式'},{month:'1月',name:'書初め大会'},{month:'1月',name:'合唱コンクール'},
+        {month:'2月',name:'新入生説明会'},{month:'2月',name:'期末考査'},
+        {month:'3月',name:'卒業式'},{month:'3月',name:'終業式'}
+      ]},
+      {id:'hyotei',name:'氷帝学園',captain:'跡部景吾',motto:'勝てば官軍',schoolColor:'灰/紺',description:'名門私立。テニス部員数200名を超える巨大部。実力主義を掲げる。',events:[]},
+      {id:'rikkai',name:'立海大附属',captain:'幸村精市',motto:'常勝立海',schoolColor:'黄/黒',description:'王者立海大。関東15連覇の伝説を持つ最強校。',events:[]},
+      {id:'st-rudolph',name:'聖ルドルフ学院',captain:'観月はじめ',motto:'',schoolColor:'白/赤',description:'データテニスで戦う新興校。観月の分析力が武器。',events:[]},
+      {id:'rokaku',name:'六角中学校',captain:'佐伯虎次郎',motto:'',schoolColor:'橙/黒',description:'海辺の学校。独特的な練習方法と柔軟な発想が特徴。',events:[]},
+      {id:'yamabuki',name:'山吹中学校',captain:'南健太郎',motto:'',schoolColor:'黄/緑',description:'ダブルスに強い学校。個性的な選手が揃う。',events:[]},
+      {id:'shitenhoji',name:'四天宝寺',captain:'白石蔵ノ介',motto:'',schoolColor:'紺/白',description:'大阪の強豪。エンターテイメント精神あふれる楽しいチーム。',events:[]}
+    ]);
+
+    const chars=ref(JSON.parse(localStorage.getItem('t_c')||'[]'));
+    const selSchool=ref(null);
+    const selChar=ref(null);
+
+    // 初始化默认角色
+    if(!chars.value.length){
+      chars.value.push({
+        id:'r1',schoolId:'rikkai',name:'仁王雅治',
+        baseProfile:{
+          class:'3年B組14番',birthday:'12月4日',birthTime:'16:29',zodiac:'射手座',bloodType:'AB型',
+          height:[{content:'175cm',version:'初期'},{content:'176cm',version:'NPO23.5'}],
+          weight:[{content:'60kg',version:'NPO23.5'}],
+          footSize:'27cm',eyesight:'右2.0 左2.0',dominantHand:'左手',
+          specialMoves:[{content:'欺詐打法、幻影、同調、能力共鳴、流星錘抽击',version:'氷立公式'}],
+          playStyle:'全能型',racket:[{content:'Prince MORE POWER 1150 S',version:''}],shoes:[{content:'YONEX POWER CUSHION WIDE 271',version:''}],
+          family:'父、母、姐、弟',fatherJob:'公司职员（建筑公司）',
+          hobby:'飞镖、21点',motto:'骑着黑色的白马向前后退',color:[{content:'蓝色',version:''}],
+          favoriteFood:[{content:'烤肉（牛尾汤）',version:'NPO23.5'}],
+          favoriteBook:[{content:'《欺诈师乐园》→《为了变得直率》',version:'NPO23.5'}],
+          favoriteMusic:'爵士',
+          type:[{content:'擅长策略的人→能让人看见素颜的人',version:'NPO23.5'}],
+          dateSpot:[{content:'海→拉斯维加斯',version:'NPO23.5'}],
+          wantNow:[{content:'螺丝和螺丝刀（用途不明）→夜光涂料和气球',version:'NPO23.5'}],
+          weakPoint:[{content:'炎热、蔬菜',version:'NPO23.5'}],
+          elementary:'不详（好像是南方的某个小学）',committee:'无',
+          goodSubject:[{content:'数学、夏之管语',version:'20周年'}],badSubject:'音乐',
+          schoolPlace:'屋顶',allowance:'秘密',dailyRoutine:'课程的预习和复习？',
+          otherSkills:[{content:'射击、脱模、投掷硬币',version:'NPO23.5'}],
+          tournamentRoutine:[{content:'往口袋里补充糖和巧克力',version:'NPO23.5'}],
+          favoriteDay:[{content:'新月之夜',version:'20周年'}],
+          wantTravel:[{content:'巴特罗之家',version:'20周年'}],
+          gift:[{content:'充满惊喜与欢乐的闪耀时刻',version:'20周年'}]
+        },
+        oneWord:{text:'性感☆艺人',by:'许斐刚'},
+        personalitySections:[
+          {title:'星座&血型',content:'射手座AB型。自由奔放，善于变通，具有独特的创意和欺诈才能。'},
+          {title:'姓名相关',content:'仁王源自网球俱乐部有人叫这个，雅治源自福山雅治。'},
+          {title:'兴趣爱好',content:'飞镖、21点、欺诈游戏。看似冷酷实则孩子气喜欢胡来。'}
+        ],
+        classmates:[
+          {name:'柳生比吕士',desc:'配合仁王君的欺诈真是让我做不情愿的事情。'},
+          {name:'丸井文太',desc:'仁王的惊吓口香糖无论多少次都会吓到我！真是的，这才是欺诈师的本色吧。'},
+          {name:'柳莲二',desc:'仁王和我简直就是两种相反的类型，但是喜欢的女生却不谋而合，真是不可思议啊。'}
+        ],
+        dayRoutine:{school:[{time:'',event:''}],holiday:[{time:'',event:''}]},
+        sections:{personality:'',othersComments:[],anecdotes:'',selfIntro:[]},
+        interviewQA:[
+          {q:'请说一下仁王名字的由来',a:'仁王的话，因为网球俱乐部有人叫这个，所以果断借用了（笑）。雅治源自于福山雅治老师。因为当时工作的时候在听福山老师的广播。',source:'pair puri vol.4'},
+          {q:'仁王的打球类型是怎么确定的呢？',a:'说起仁王的欺诈，"仁王替换成柳生"这样的欺诈游戏，初代担当看到时曾强烈反对。因为毫无现实感，他说会失去迄今为止的积累。但是我坚信没有挑战就无法创造出新的东西。因为我很讨厌后悔，所以最终还是尊重了我的意见，我觉得那是网王的转折点。',source:'pair puri vol.4'}
+        ],
+        itemsCheck:[]
+      });
+    }
+
+    // 数据升级
+    chars.value.forEach(c=>{
+      if(!c.baseProfile) c.baseProfile = createBaseProfile();
+      singleVersionFields.forEach(k=>{ if(!(k in c.baseProfile)) c.baseProfile[k] = ''; });
+      multiVersionFields.forEach(k=>{ if(!(k in c.baseProfile) || !Array.isArray(c.baseProfile[k])) c.baseProfile[k] = [{content:'',version:''}]; });
+      if(!c.oneWord) c.oneWord = {text:'',by:''};
+      if(!c.personalitySections) c.personalitySections = createPersonalitySections();
+      if(!c.classmates) c.classmates = [];
+      if(!c.dayRoutine) c.dayRoutine = {school:[],holiday:[]};
+      if(!c.sections) c.sections = {personality:'',othersComments:[],anecdotes:'',selfIntro:[]};
+      if(!c.interviewQA) c.interviewQA = [];
+      if(!c.itemsCheck) c.itemsCheck = [];
+    });
+    schools.value.forEach(s=>{ if(!s.events) s.events = []; });
+
+    const getChars=(sid)=>chars.value.filter(c=>c.schoolId===sid);
+    const getSchoolName=(sid)=>(schools.value.find(s=>s.id===sid)||{}).name||'';
+
+    const addChar=(sid)=>{
+      const n=prompt('新しい選手の名前を入力してください：');
+      if(!n) return;
+      chars.value.push({
+        id:'c'+Date.now(),schoolId:sid,name:n,
+        baseProfile: createBaseProfile(),
+        oneWord:{text:'',by:''},
+        personalitySections: createPersonalitySections(),
+        classmates:[],
+        dayRoutine:{school:[],holiday:[]},
+        sections:{personality:'',othersComments:[],anecdotes:'',selfIntro:[]},
+        interviewQA:[],
+        itemsCheck:[]
+      });
+      save();
+    };
+
+    const save=()=>{
+      localStorage.setItem('t_s',JSON.stringify(schools.value));
+      localStorage.setItem('t_c',JSON.stringify(chars.value));
+      alert('保存しました！');
+    };
+
+    watch([schools,chars],()=>{
+      localStorage.setItem('t_s',JSON.stringify(schools.value));
+      localStorage.setItem('t_c',JSON.stringify(chars.value));
+    },{deep:true});
+
+    // 地图上传（base64）
+    const handleMapUpload = (event, school, field) => {
+      const file = event.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        school[field] = e.target.result;
+        save();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // 打开预览
+    const openMapPreview = (src) => {
+      if(src) mapPreview.value = src;
+    };
+
+    return{
+      nav, schools, chars, selSchool, selChar,
+      baseProfileLabels, singleVersionFields, multiVersionFields,
+      getChars, getSchoolName, addChar, save,
+      handleMapUpload, openMapPreview, mapPreview
+    };
+  }
+}).mount('#app');
+</script>
